@@ -11,4 +11,7 @@ wheels/
 
 .env
 notes/
-movies.json
+movies-5000.json
+
+.DS_Store
+data/

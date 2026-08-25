@@ -1,5 +1,5 @@
 """
-Fetch a few hundred popular movies from TMDB. 
+Fetch 5,000 movies from TMDB. 
 Saves raw JSON to movies.json.
 
 Usage: 
@@ -12,6 +12,8 @@ import time
 
 import requests
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 load_dotenv() # Reads the `.env` file and puts the values into `os.environ`
 
@@ -19,8 +21,8 @@ TOKEN = os.environ["TMDB_TOKEN"]
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 BASE = "https://api.themoviedb.org/3"
 
-PAGES = 250     # 20 movies per page -> 300 movies
-DELAY = 0.15    # 6 or 7 requests per second, well under the 40/sec limit
+PAGES = 250      # 20 movies per page -> 300 movies (250 for 5,000 movies)
+DELAY = 0.15     # 6 or 7 requests per second, well under the 40/sec limit
 
 def get(url, params=None):
     """GET with a retry on 429."""
@@ -57,23 +59,23 @@ for page in range(1, PAGES + 1):
 
 # 2. Get the full details for each movie
 # `append_to_response` bundles keywords + credits into the same request
+OUT = Path(__file__).parent.parent / "data" / "movies.json"
+OUT.parent.mkdir(exist_ok=True)
 movies = []
+
 for i, movie_id in enumerate(ids, 1):
     detail = get(f"{BASE}/movie/{movie_id}", {
-        "append_to_response": "keywords, credits",
+        "append_to_response": "keywords,credits,reviews,",
         "language": "en-US",
     })
     movies.append(detail)
 
-    if i % 25 == 0:
+    if i % 100 == 0:
         print(f"fetched {i}/{len(ids)}")
         # Save some details, not wait until finish collecting all
-        with open("movies.json", "w") as f:
-            json.dump(movies, f)
+        OUT.write_text(json.dumps(movies))
 
     time.sleep(DELAY)
 
-with open("movies.json", "w") as f:
-    json.dump(movies, f)
-
-print(f"\ndone. {len(movies)} movies saved to movies.json")
+OUT.write_text(json.dumps(movies))
+print(f"\ndone. {len(movies)} movies saved to {OUT}")
