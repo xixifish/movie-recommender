@@ -17,7 +17,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 DATA = Path(__file__).parent.parent / "data"
-RAW = DATA / "movies.json"
+RAW = DATA / "movies.jsonl"
 TEXTS = DATA / "texts.json"
 
 MODEL = "all-MiniLM-L6-v2"
@@ -67,9 +67,15 @@ FIELDS = {
 
 # --- job 1: build the texts file ---
 
+def load_raw():
+    """One film per line."""
+    with open(RAW) as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
 def build_texts():
     print(f"reading {RAW.name} ...")
-    movies = json.load(open(RAW))
+    movies = load_raw()
 
     rows = []
     for m in movies:

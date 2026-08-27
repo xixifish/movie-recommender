@@ -3,17 +3,18 @@ Look at the fetched movie data.
 Prints coverage and text lengths. Saves nothing. 
 
 Usage:
-    uv run experiments/inspect.py
+    uv run experiments/check_data.py
 """
 
 import json
 from pathlib import Path
 
-PATH = Path(__file__).parent.parent / "data" / "movies.json"
+PATH = Path(__file__).parent.parent / "data" / "movies.jsonl"
 LIMIT = 1000   # characters. MiniLM reads about 256 tokens, roughly this many
 
 print(f"loading {PATH.name} ...")
-movies = json.load(open(PATH))
+with open(PATH) as f:
+    movies = [json.loads(line) for line in f if line.strip()]
 n = len(movies)
 print(f"{n} films\n")
 
