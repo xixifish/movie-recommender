@@ -63,7 +63,7 @@ The hard ones. Expect low scores.
 - rule: horror built to frighten. A tense thriller does not count
 - must appear: The Exorcist, Hereditary, The Conjuring
 
-**a good film for a bad day**
+**a good movie for a bad day**
 - rule: warm, easy, ends well. You feel better after it
 - must appear: Paddington 2, Amelie, The Princess Bride
 - note: no plot summary says "this will cheer you up". Expect it to fail the same way "makes me cry" does
@@ -89,7 +89,7 @@ The interesting middle. No prediction.
 
 Score these three on their own.
 
-**gritty atmospheric mystery films, Memories of Murder, Zodiac**
+**gritty atmospheric mystery movies, Memories of Murder, Zodiac**
 - rule: slow, dark investigation, heavy atmosphere, often no clean answer
 - must appear: Prisoners, Se7en, Zodiac
 - this is "more like this", not search. The named films cannot be matched by name, since there is no title in the vectors. Judge the style match only
@@ -99,7 +99,7 @@ Score these three on their own.
 - must appear: expect nothing
 - tests the catalogue, not the model. The set is 98% English
 
-**a Tom Hanks film**
+**a Tom Hanks movie**
 - rule: Tom Hanks is in the main cast
 - must appear: Forrest Gump, Cast Away, Saving Private Ryan
 - tests the cast field only. Says nothing about meaning search

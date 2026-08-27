@@ -1,7 +1,7 @@
 [project]
 name = "movie-recommender"
 version = "0.1.0"
-description = "Add your description here"
+description = "Semantic movie search and a tap-to-rerank recommender"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
