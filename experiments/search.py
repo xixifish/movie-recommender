@@ -24,34 +24,35 @@ RESULTS = HERE / "results"
 MODEL = "all-MiniLM-L6-v2"
 TOP_N = 10
 
+# Guessed weights
 WEIGHTS = {
-    "overview": 0.40,
-    "keywords": 0.25,
-    "reviews":  0.15,
-    "genres":   0.10,
+    "overview": 0.38,
+    "keywords": 0.24,
+    "reviews":  0.14,
+    "genres":   0.09,
     "tagline":  0.05,
     "cast":     0.05,
+    "director": 0.05,
 }
 
 
 # --- load once ---
-
 print("loading ...")
 rows = json.loads((DATA / "texts.json").read_text())
 n = len(rows)
 
+
 vectors = {}
-masks = {}
+masks = {}  # For knowing which field is empty
 for name in WEIGHTS:
     vectors[name] = np.load(DATA / f"vec_{name}.npy")
-    masks[name] = np.array([bool(r[name]) for r in rows])   # has this text?
+    masks[name] = np.array([bool(r[name]) for r in rows])   # does the film has this text?
 
 model = SentenceTransformer(MODEL)
 print(f"{n} films, {len(WEIGHTS)} fields\n")
 
 
 # --- scoring ---
-
 FIELDS = list(WEIGHTS)          # WEIGHTS is the manual fallback, blended in below
 TEMPERATURE = 0.1               # lower = winner takes more
 BLEND = 0.8                     # how much to trust the automatic weights
@@ -61,6 +62,7 @@ def field_sims(query):
     """Cosine scores for every field. Empty text is pushed to -1."""
     q = model.encode([query], normalize_embeddings=True)[0]
     return {
+        # If a film has no text in this field, then -1.0 replaces its dot product
         name: np.where(masks[name], vectors[name] @ q, -1.0)
         for name in FIELDS
     }
@@ -85,7 +87,7 @@ def auto_weights(sims_by_field):
 
 def score_all(query):
     """Returns (scores, weights, confidence). The weights change per query,
-    so they are returned, not printed. The caller decides where they go."""
+    and the caller decides where they go."""
     sims = field_sims(query)
     weights, conf = auto_weights(sims)
 

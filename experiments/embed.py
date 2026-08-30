@@ -51,6 +51,12 @@ def cast(m):
     return ", ".join(c["name"] for c in people[:CAST_N])
 
 
+def director(m):
+    crew = (m.get("credits") or {}).get("crew", [])
+    names = [c["name"] for c in crew if c.get("job") == "Director"]
+    return ", ".join(dict.fromkeys(names))   # dedupe, keep order
+
+
 def reviews(m):
     found = (m.get("reviews") or {}).get("results", [])
     return " ".join(r["content"][:REVIEW_CHARS] for r in found[:REVIEW_N])
@@ -62,6 +68,7 @@ FIELDS = {
     "genres": genres,
     "keywords": keywords,
     "cast": cast,
+    "director": director,
     "reviews": reviews,
 }
 

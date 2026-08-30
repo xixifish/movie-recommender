@@ -35,24 +35,28 @@ def stats(values):
 def overview(m):
     return m.get("overview") or ""
 
-
 def tagline(m):
     return m.get("tagline") or ""
 
-
 def genres(m):
     return ", ".join(g["name"] for g in m.get("genres", []))
-
 
 def keywords(m):
     kw = (m.get("keywords") or {}).get("keywords", [])
     return ", ".join(k["name"] for k in kw)
 
+def cast_list(m):
+    return [c["name"] for c in (m.get("credits") or {}).get("cast", [])[:6]]
 
 def cast(m):
-    people = (m.get("credits") or {}).get("cast", [])
-    return ", ".join(c["name"] for c in people[:8])
+    return ", ".join(cast_list(m))
 
+def directors(m):
+    crew = (m.get("credits") or {}).get("crew", [])
+    return [c["name"] for c in crew if c.get("job") == "Director"]
+
+def director(m):
+    return ", ".join(directors(m))
 
 def review_list(m):
     return [r["content"] for r in (m.get("reviews") or {}).get("results", [])]
@@ -66,7 +70,8 @@ FIELDS = {
     "tagline": tagline,
     "genres": genres,
     "keywords": keywords,
-    "cast (top 8)": cast,
+    "cast (top 6)": cast,
+    "director": director,
     "reviews": reviews,
 }
 
@@ -111,6 +116,14 @@ med, p90, mx = stats(counts)
 print(f"  entries per film: median {med}, 90th {p90}, max {mx}")
 print(f"  films with none:  {sum(1 for c in counts if c == 0)}")
 
+# --- director in detail ---
+
+print("\nDIRECTOR")
+counts = [len(directors(m)) for m in movies]
+med, p90, mx = stats(counts)
+print(f"  directors per film: median {med}, 90th {p90}, max {mx}")
+print(f"  films with none:  {sum(1 for c in counts if c == 0)}")
+print(f"  films with two+:  {sum(1 for c in counts if c > 1)}")
 
 # --- one film, to see the shape ---
 

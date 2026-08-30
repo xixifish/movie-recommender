@@ -21,7 +21,7 @@ Expect high scores. This is what embeddings do well.
 
 **time travel**
 - rule: moving through time drives the plot
-- must appear: Back to the Future, Looper, 12 Monkeys
+- must appear: Back to the Future, Looper, Twelve Monkeys
 - decide: does a time loop count?
 
 **courtroom drama**
@@ -34,7 +34,7 @@ Expect high scores. This is what embeddings do well.
 
 **alien movies**
 - rule: life from outside Earth appears and matters to the plot
-- must appear: Alien, Arrival, E.T.
+- must appear: Alien, Arrival, E.T. the Extra-Terrestrial
 
 **survival in the wild**
 - rule: staying alive in nature is the main problem
@@ -42,7 +42,7 @@ Expect high scores. This is what embeddings do well.
 
 **a road trip**
 - rule: the road journey is the shape of the film, not one scene in it
-- must appear: Little Miss Sunshine, Thelma and Louise, Rain Man
+- must appear: Little Miss Sunshine, Thelma & Louise, Rain Man
 
 ---
 
@@ -52,7 +52,7 @@ The hard ones. Expect low scores.
 
 **makes me cry**
 - rule: films known to make viewers cry
-- must appear: Grave of the Fireflies, The Green Mile, Marley and Me
+- must appear: Grave of the Fireflies, The Green Mile, Marley & Me
 
 **something funny**
 - rule: a comedy whose main job is to make you laugh
@@ -65,7 +65,7 @@ The hard ones. Expect low scores.
 
 **a good movie for a bad day**
 - rule: warm, easy, ends well. You feel better after it
-- must appear: Paddington 2, Amelie, The Princess Bride
+- must appear: Paddington 2, Amélie, The Princess Bride
 - note: no plot summary says "this will cheer you up". Expect it to fail the same way "makes me cry" does
 
 ---
@@ -103,5 +103,12 @@ Score these three on their own.
 - rule: Tom Hanks is in the main cast
 - must appear: Forrest Gump, Cast Away, Saving Private Ryan
 - tests the cast field only. Says nothing about meaning search
+
+**a Christopher Nolan movie**
+- rule: Christopher Nolan directed it
+- must appear: Inception, Interstellar, The Dark Knight
+- tests the director field only. Says nothing about meaning search
+- watch: a first name shared with another director. "Tom George" scored on
+  "Tom Hanks", so partial name matches leak
 
 
