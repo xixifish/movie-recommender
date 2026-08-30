@@ -57,7 +57,7 @@ def get_ids():
             "page": page,
         })
         if not data["results"]:
-            print("no more results")
+            print("No more results")
             break
         ids += [m["id"] for m in data["results"]]
         print(f"page {page}: {len(ids)} ids so far")
