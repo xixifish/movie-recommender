@@ -91,6 +91,8 @@ def build_texts():
             "title": m.get("title") or "",
             "year": (m.get("release_date") or "")[:4],
             "poster": m.get("poster_path") or "",
+            "vote_count": m.get("vote_count") or 0,
+            "vote_average": m.get("vote_average") or 0.0,
         }
         for name, getter in FIELDS.items():
             row[name] = getter(m)

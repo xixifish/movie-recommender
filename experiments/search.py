@@ -24,6 +24,8 @@ RESULTS = HERE / "results"
 MODEL = "all-MiniLM-L6-v2"
 TOP_N = 10
 
+QUALITY = 0.5   # How much quality counts, 0 turns it off
+
 # Guessed weights
 WEIGHTS = {
     "overview": 0.38,
@@ -41,6 +43,14 @@ print("loading ...")
 rows = json.loads((DATA / "texts.json").read_text())
 n = len(rows)
 
+def percentile_rank(values):
+    """Turn numbers into an even 0 to 1 spread, by rank.
+    The least voted film becomes 0, the most voted becomes 1."""
+    return values.argsort().argsort() / (len(values) - 1)
+
+votes = np.array([r["vote_count"] for r in rows], dtype=float)
+rating = np.array([r["vote_average"] for r in rows], dtype=float)
+quality = (percentile_rank(votes) + percentile_rank(rating)) / 2
 
 vectors = {}
 masks = {}  # For knowing which field is empty
@@ -99,7 +109,9 @@ def score_all(query):
         total += w * np.where(present, sims[name], 0.0) * present
         weight_used += w * present
 
-    return total / np.maximum(weight_used, 1e-9), weights, conf
+    similarity = total / np.maximum(weight_used, 1e-9)
+
+    return similarity * (1 + QUALITY * quality), weights, conf
 
 
 def show(query, k=TOP_N):
@@ -155,6 +167,7 @@ def run_all():
         f"temperature  {TEMPERATURE}",
         f"blend        {BLEND}",
         "fallback     " + ", ".join(f"{k} {v}" for k, v in WEIGHTS.items()),
+        f"quality      {QUALITY}",
         "```", "",
     ]
 
