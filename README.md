@@ -48,30 +48,42 @@ not a measurement.
 
 Each film has seven text fields: genres, tagline, overview, keywords, cast,
 director, reviews. **Each field is embedded separately**, not glued into one
-paragraph.
+paragraph. In one blob, length becomes weight by accident: a 300 word review
+counts ten times more than a 30 word overview. Separate vectors make the weight
+a number you set.
 
-That is because in one blob, length becomes weight by accident. A 300 word review counts ten times more than a 30 word overview. Separated vectors can make the weight of each to be set. 
+**The weights are then chosen per query, automatically.** For each field, measure
+how far its top results sit above its own middle, then turn those gaps into
+weights. A field that finds something clear takes over. A field that finds
+nothing gets little say.
 
-**The weights are then chosen per query, automatically.** For each field,
-measure how far its top results sit above its own middle, then turn those gaps
-into weights. A field that finds something clear takes over. A field that finds nothing gets little say.
+"Tom Hanks" needs the cast field high. "vampire" needs it near zero. No fixed set
+can serve both. Automatic weighting took "a Tom Hanks movie" from **0 out of 10**
+to **10 out of 10**, with no rule anywhere telling it the query was about a
+person.
 
-"Tom Hanks" needs the cast field high. "vampire" needs it near zero. No fixed set of weights can serve both. Automatic weighting took "a Tom Hanks movie" from **0 out of 10** for fixed weights to **10 out of 10**, with no rule anywhere telling it the query was about a person.
+The method, step by step, is in
+[`docs/02-experiment-plan.md`](docs/02-experiment-plan.md).
 
 ---
 
 ## What the experiment found
 
-Topic search works. vampire 0.558, time travel 0.527, really scary 0.488.
-Clean lists.
+Seventeen test queries, scored by hand against rules written before any results
+were seen.
 
-Mood search fails, and not for the reason I expected. The model reads how strong a feeling is, but not which way it points. Measured on the model itself, "comforting" sits closer to "disturbing" than to "heartwarming".
+| Query type | Score |
+| --- | --- |
+| names, like "a Christopher Nolan movie" | 19/20 |
+| mood, like "really scary" | 37/40 |
+| topic, like "vampire" | 44/50 |
+| two ideas at once, like "fall in love with a city" | 28/50 |
 
-So "a good movie for a bad day" returned slasher films. No wording fixes that, and neither does the obvious cheap fix: choosing a genre by vector similarity ranks Horror above Comedy for a comfort query. It needs something that can reason.
+**Embeddings are good at meaning and bad at facts.** Filters are the opposite.
+The design needs both, and the queries that ask for two things at once are the
+ones still waiting on it.
 
-The wider lesson: **embeddings are good at meaning and bad at facts.** Filters are the opposite. The design needs both.
-
-Full write-up in [`docs/03-findings.md`](docs/03-findings.md). Raw runs, with the settings and per-query weights that produced each one, in `experiments/results/`.
+Full write-up in [`docs/03-findings.md`](docs/03-findings.md). Raw runs, with the settings and the per-query weights that produced each one, in `experiments/results/`.
 
 ---
 
@@ -88,9 +100,9 @@ Full write-up in [`docs/03-findings.md`](docs/03-findings.md). Raw runs, with th
 ## Repo
 
 ```
-docs/         the product document
-notes/        plan, findings, and what to study next
-experiments/  fetch, embed, search, and saved runs
+docs/         the product, the method, the findings
+notes/        where the project stands
+experiments/  fetch, embed, search, and every saved run
 data/         raw JSON and vectors (not committed)
 ```
 
@@ -98,13 +110,11 @@ data/         raw JSON and vectors (not committed)
 
 ## Next
 
-1. Add a quality term to the ranking, so known films rise and obscure ones fall
-2. Test the tap loop. Nothing tests it yet, and it is the point of the product
-3. Design
-4. An LLM reads the query, pulls out named films and hard filters, and the
-   embedding ranks what is left
-5. Shrink the vectors and ship them as one binary file
-6. Build
+Design and build. The search is good enough to start, and the tap loop cannot be
+judged without a person tapping.
+
+The full list, with what is still open, is in
+[`notes/progress.md`](notes/progress.md).
 
 ---
 

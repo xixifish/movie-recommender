@@ -2,330 +2,311 @@
 
 What the search experiment showed. The method is in `02-experiment-plan.md`.
 
-Three runs so far. Run 1 used fixed weights, run 2 automatic per-query weights,
-both on 25 Aug 2026 with six fields. Run 3 added a seventh field, `director`, on
-27 Aug. Full output in `experiments/results/`.
+Six runs so far, three of them scored by hand against `experiments/query-rules.md`.
+Raw output is in `experiments/results/`.
+
+Updated 31 Aug 2026
 
 ---
 
-## 1. Topic search works
+## Where it stands
 
-vampire 0.558, time travel 0.527, really scary 0.488, courtroom drama 0.458.
-Clean lists.
+Best run: `run-2026-08-31-1256.md`. Seven fields, automatic weights, quality term
+multiplied at 0.5.
 
-This is the core assumption, and it holds.
+| Query type | Score | |
+| --- | --- | --- |
+| name | 19/20 | 95% |
+| mood | 37/40 | 93% |
+| topic | 44/50 | 88% |
+| theme | 28/50 | 56% |
+| catalogue test | 0/10 | |
+| **total** | **128/170** | **75%** |
+
+Must-appear films found: **14/45** in the top 10. But the product shows 50 films,
+not 10, and at 50 it is **26/45**. The test is harder than the product.
+
+**The core assumption holds.** A vector built from a film's text does return films
+a person would accept, for the query types people actually use. What is left is
+one specific failure, described in finding 5.
 
 ---
 
-## 2. Mood search fails
+# What works
 
-"makes me cry" tops out at 0.243. Very low. Nothing in the set is close.
+## 1. Topic search
 
-"a good movie for a bad day" is worse, because it scored **high** and was still
-wrong. Run 1 returned Suburbicon, Speak No Evil, The Final Girls and Friday the
-13th Part III. Slasher films, for a query asking to be cheered up.
+vampire, time travel, alien films, courtroom drama. 44/50.
 
-The model is not confused about what these films are. It matches **how strong a
-feeling is, and ignores which way the feeling points.** A description full of
-feeling words scores high either way.
+This was the thing to prove, and it holds. Clean lists, high scores, and the
+failures are films that are *nearly* right rather than nonsense.
 
-No wording fixes this. It needs a filter to set the direction.
+## 2. Names, once the fields exist
 
-### Why the model is like this
+```
+a Tom Hanks movie          9/10
+a Christopher Nolan movie  10/10
+```
 
-Measured directly on the model, not on films:
+Both were 0/10 at first. Cast fixed one, director fixed the other, and neither
+needed a rule telling the system that the query was about a person. See
+finding 7.
+
+## 3. Mood, after the quality term
+
+**This corrects an earlier conclusion.**
+
+The old finding said mood search fails. With the quality term it scores 37/40,
+the second best group.
+
+```
+                             before   after
+makes me cry                    6       10
+something funny                10       10
+really scary                   10       10
+a good movie for a bad day      4        7
+```
+
+The mood failures were mostly **obscure films with odd descriptions**, not a
+failure to understand mood. Remove those and mood queries work.
+
+The direction problem is real but smaller than it looked. Measured on the model
+itself:
 
 ```
 comforting  vs  disturbing     0.54
 comforting  vs  heartwarming   0.50
 ```
 
-**It thinks "comforting" is closer to "disturbing" than to "heartwarming".**
+It thinks "comforting" is closer to "disturbing" than to "heartwarming". Feelings
+of the same strength sit near each other whichever way they point. That still
+shows: *The Shining* is still in "a good movie for a bad day".
 
-| Comparison | Similarity |
-| --- | --- |
-| positive vs positive | 0.46 |
-| negative vs negative | 0.66 |
-| **positive vs negative** | **0.37** |
-| emotion vs an unrelated word | 0.11 |
-
-Opposite feelings sit at 0.37. Unrelated words sit at 0.11. So opposites are
-three times closer than random things.
-
-The model knows both words are about feeling. It does not know they point
-opposite ways. Like a number where you can see the size but not the sign.
-
-### And the cheap fix does not work either
-
-The obvious cheap fix is to skip the LLM and pick genres by vector similarity:
-match the query against the 19 genre names and filter on the best ones.
-
-It works when the query names a genre:
-
-```
-"really scary"   ->  Horror 0.644, rank 1 of 19
-```
-
-It fails on exactly the queries that need it:
-
-```
-"something comforting and uplifting"
-    Romance   0.308
-    Thriller  0.298
-    Music     0.294
-    Horror    0.279   <- rank 4
-    Comedy    0.238   <- rank 5
-```
-
-**Horror ranks above Comedy.** A vector-chosen genre filter would push a comfort
-search towards horror, which is the error it was meant to fix.
-
-The reason is the same one above. "Comforting" is not a similar *word* to
-"Comedy". Connecting them needs reasoning, not distance.
-
-**So for mood queries the LLM is not an optimisation. It is the whole fix.** The
-only alternative is a hand-written word-to-genre map, which works for the words
-you thought of and fails for the rest.
-
-Note also that the working case is already covered. The `genres` field is this
-same match, and automatic weighting already uses it. On "really scary" genres had
-the highest confidence of all seven fields, 0.469. So a genre filter without an
-LLM adds almost nothing that is not already there.
-
-### The limit of genre filtering, even with an LLM
-
-Genre is a stand-in for mood, and a rough one:
-
-```
-Man Bites Dog       Comedy, Crime      a disturbing film, tagged Comedy
-Shaun of the Dead   Horror, Comedy     a comforting film, tagged Horror
-```
-
-An "include Comedy" filter lets Man Bites Dog through. An "exclude Horror"
-filter throws Shaun of the Dead out.
-
-**A better version:** label mood directly. Run an LLM over the 5,000 films once,
-offline, and tag each with words like `warm, gentle, tense, bleak`. Then filter
-on the tags instead of on genre. It runs once, it ships with the film data so the
-filtering stays in the browser, and it fixes exactly this case. Untested.
+But it costs about three marks now, not thirty.
 
 ---
 
-## 3. A high score does not mean a right answer
+# What does not work
 
-In run 1, "a good movie for a bad day" scored **0.432** and was wrong.
-"heist" scored **0.378** and was much more right.
+## 4. The catalogue, not the model
+
+"Chinese civil war" scores 0/10 and always has. The catalogue is 98% English.
+
+This was designed as a catalogue test, and it did its job. Nothing in the ranking
+can fix it.
+
+## 5. Two ideas at once
+
+**This is the only substantial failure left.**
+
+```
+fall in love with a city    0/10
+survival in the wild        5/10
+gritty atmospheric mystery  6/10
+```
+
+Each asks for two things:
+
+| Query | Part one | Part two |
+| --- | --- | --- |
+| fall in love with a city | a city | make it appealing |
+| survival in the wild | staying alive | in nature |
+| gritty atmospheric mystery | a mystery | gritty, heavy |
+
+The model takes the stronger half and drops the other.
+
+- "fall in love with a city" returns romance. It read "fall in love"
+- "gritty atmospheric mystery" returns *See How They Run*, a comedy whodunit. It
+  read "mystery"
+- "Chinese civil war" returned Chinese martial arts films. It read "Chinese"
+
+**"Fall in love with a city" has never worked**, at any setting: 4, then 6, then
+0. It is the clearest case in the project for the filter layer, because a filter
+can require both conditions and an embedding cannot.
+
+---
+
+# How the ranking was built
+
+## 6. A high score does not mean a right answer
+
+In run 1, "a good movie for a bad day" scored **0.432** and was wrong. "heist"
+scored **0.378** and was much more right.
 
 So a score floor cannot work. Scores can be compared inside one query, never
-between queries.
+between queries. And now that the quality term multiplies the score, they cannot
+be compared between settings either.
 
-**Field confidence might do the job instead.** The gap between a field's top and
-its middle separated good queries from bad ones where the raw score did not:
+**Field confidence works where the raw score did not.** The gap between a field's
+top 10 and its own median separates a good query from a bad one.
 
-```
-vampire       0.42
-Tom Hanks     0.39
-makes me cry  0.27
-```
-
-Worth checking against all sixteen queries.
-
----
-
-## 4. One set of weights cannot work
+## 7. One set of weights cannot work
 
 "Tom Hanks" needs cast high. "vampire" needs cast near zero. A fixed set is
 always wrong for one of them.
 
-**Automatic weighting fixed it.** "a Tom Hanks movie" went from **0/10 to
-10/10**, with no rule telling it the query was about a person. On "vampire" it
-correctly dropped cast to 0.035.
+**Automatic weighting fixed it.** For each field, measure how far its top results
+sit above its own middle, then softmax those gaps into weights.
 
-This is the strongest result in the project.
+```
+a Tom Hanks movie   0/10  ->  10/10
+```
 
----
+with no rule anywhere about people.
 
-## 5. Cast belongs in the score
+Then the same method found a field it had never seen. Adding `director` fixed
+"a Christopher Nolan movie" from 0/10 to 10/10, with **no change to the weighting
+code**. That is the strongest evidence that the method generalises rather than
+being tuned to what it was built on.
 
-Cast alone on "Tom Hanks" scored **0.729** and returned ten Tom Hanks films.
-This was an interactive probe, not a saved run. Worth re-running and recording.
+Two settings matter:
 
-The field was never the problem. The weight was.
+- **Do not divide by the standard deviation.** The fields all have a similar
+  spread, about 0.061 to 0.081, so it corrects nothing. But it makes every number
+  about 13 times bigger, which breaks the temperature
+- **Temperature must match the size of the gaps.** Gaps run 0.1 to 0.4, so
+  temperature must be near 0.1. At 1.0 the softmax is flat and does nothing
 
----
+## 8. The quality term: multiply, do not add
 
-## 6. The words "film" and "movie" poison a query
+**The problem.** Nothing rewarded a film for being known or liked. "something
+funny" returned *Sun in Buckets* and *Cado dalle nubi*. "a good movie for a bad
+day" returned *Date Movie*, rated 4.27, one of the lowest in the catalogue.
 
-In run 1, "a Tom Hanks movie" returned Mank, The Disaster Artist and 8MM. All
-films about making films. It matched "movie", not "Tom Hanks".
+**The fix.** A quality score from `vote_count` and `vote_average`, each turned
+into a percentile rank so they sit on the same scale as a cosine score, then
+averaged.
 
-Both words do it. Neither carries meaning here, and both pull hard toward films
-about the film industry.
+Both signals are needed. `vote_count` means known, `vote_average` means liked.
+Date Movie has 1,078 votes, above the catalogue floor, so vote count alone would
+not have caught it.
 
-A job for the LLM layer: strip these words out.
+**Adding it failed.**
 
----
+```
+score = similarity + 0.3 * quality      121/170, down from 127
+```
 
-## 7. In a two part query, the stronger part wins
+Every film got the same bonus regardless of how well it matched. Famous films
+that did not fit rose anyway: WALL·E and Blade Runner for "heist", Schindler's
+List for "a Tom Hanks movie". *The Shining* appeared in four different queries.
 
-- "fall in love with a city" gave romance. It read "fall in love"
-- "friendship that falls apart" gave friendship films, not broken ones
-- "Chinese civil war" gave Chinese martial arts films. It read "Chinese"
+This is exactly what the plan warned about: every query returning the same
+blockbusters.
 
-The model cannot hold two ideas and require both. This is the filter layer's job.
+**Multiplying worked.**
 
----
+```
+score = similarity * (1 + 0.5 * quality)     128/170
+```
 
-## 8. The must-appear films are missing
+The bonus is now a share of how well the film already matched. A poor match gets
+a small boost, a good match gets a large one. The blockbusters stayed down, and
+the well-known films that *did* match rose instead.
 
-No Heat. No Ocean's Eleven. No Revenant. No Exorcist. No Zodiac.
+| | precision | must-appear |
+| --- | --- | --- |
+| no quality term | 127/170 | 12/45 |
+| adding, 0.3 | 121/170 | 18/45 |
+| **multiplying, 0.5** | **128/170** | **14/45** |
 
-"really scary" returns all horror, but Ouija and Annabelle instead of The
-Exorcist.
+**It is not a clean win.** By group:
 
-Nothing in the score rewards a film for being good or well known.
+```
+             baseline   multiply 0.5
+mood            30/40      37/40     +7
+theme           33/50      28/50     -5
+topic           45/50      44/50     -1
+```
 
----
+Mood gained a lot. Theme lost. Part of the theme drop is a stricter second look
+at "fall in love with a city", scored 4 then 0, so the comparison is not clean.
+**Two things changed at once: the setting, and the scorer.** Worth avoiding next
+time.
 
-## 9. Automatic weights let obscure films in
+## 9. A name is a fact, and facts leak
 
-New in run 2: Sun in Buckets, Cado dalle nubi, Marry Me Dude, The Santa Claus
-Gang, It Boy. "something funny" and "a road trip" both got worse.
+Cast and director both work, and both leak.
 
-**Why.** Automatic weighting hands power to whichever field has a standout. A
-film with thin or odd text is **more likely** to be a standout by accident. So
-the method quietly rewards films with poor data.
+```
+a Tom Hanks movie  ->  See How They Run, directed by Tom George
+```
 
-This is the same failure as the old thin-catalogue problem, arriving through a
-new door.
-
----
-
-## 10. The director field, added 27 Aug
-
-Users search by director as often as by actor. The data was already fetched,
-inside `credits`, and thrown away. Only `cast` was used.
-
-Added `director` as a seventh field. Directors only, no other crew: the
-catalogue holds 42,000 stunt credits and 15,000 executive producers, which would
-be noise.
-
-**The result on name queries:**
-
-| Query | Before | After | Director weight |
-| --- | --- | --- | --- |
-| a Christopher Nolan movie | 0/10 | **10/10** | 0.712 |
-| Wes Anderson | 0/10 | **10/10** | 0.762 |
-
-"Wes Anderson" scored **0.836**, the highest score anything has reached in this
-project. The old best was vampire at 0.558.
-
-**The weighting code needed no changes.** It found the new field on its own,
-exactly as it found cast. That is the strongest evidence so far that the method
-generalises rather than being tuned to what it was built on.
-
-### But it costs something
-
-**A name is a fact, and embedding a name leaks.** "a Tom Hanks movie" dropped
-from 10/10 to 9/10. The film that leaked in was *See How They Run*, directed by
-**Tom George**. A shared first name was enough.
+A shared first name was enough. The model cannot tell two people apart. It sees
+similar looking text.
 
 **Worse: the noise arrives in clumps.** Every film by one director has an
 identical director vector. So when a name scores high by accident, that
 director's whole filmography rises together.
 
-"a good movie for a bad day" now returns *The Shining* at rank 2 and
-*Dr. Strangelove* at rank 9. Both are Kubrick. They moved as a pair.
-
-Director weight on queries containing no name at all:
-
 ```
-gritty atmospheric mystery   0.147
-alien movies                 0.118
-a good movie for a bad day   0.107
-Chinese civil war            0.081
+"a good movie for a bad day"  ->  every Stanley Kubrick film scores 0.421
+"alien movies"                ->  every Ridley Scott film scores 0.514
 ```
 
-This is Finding 9 again, sharper. Automatic weighting rewards a standout, and
-now one standout can drag ten films with it.
+That is why *The Shining* sits in "a good movie for a bad day", and why *Alien*
+entered "alien movies" for the first time. **The right answer, for the wrong
+reason.**
 
-### The fix to try next
+## 10. Confidence can be fake
 
-Director confidence separates cleanly:
+Finding 7 rewards whichever field looks most sure. Finding 9 shows a field can
+look sure by accident.
 
-| Query | Director confidence |
-| --- | --- |
-| Wes Anderson | **0.696** |
-| a Christopher Nolan movie | **0.643** |
-| gritty atmospheric mystery | 0.332 |
-| a good movie for a bad day | 0.260 |
+The measure cannot tell these apart:
 
-There is a wide empty gap between about 0.35 and 0.64. Nothing sits in it.
+- "I found the ten right films", which is director on Nolan
+- "I found one name that scores high, and it appears eight times", which is
+  Kubrick
 
-So: give director weight only when its confidence clears a floor, around 0.5.
-That should keep both 10/10 results and remove the noise. Untested.
+Both produce a clean gap between the top 10 and the median.
 
-### What is not measured yet
+**The fix, untested.** Director confidence separates cleanly:
 
-The seven field run is `run-2026-08-27-2041.md`. It is **not scored**.
+```
+a Christopher Nolan movie   0.643
+everything else             0.354 and below
+```
 
-Only two things are checked so far. Must-appear hits went from 6/45 to 7/45,
-the gain being *Alien* entering "alien movies". And the two director queries
-above were verified by hand, film by film.
+A floor near 0.5 should keep the wins and cut the noise. But there is only one
+real name query so far, so any cut-off would be fitted to a single example. Add
+more name queries first.
 
-The other fifteen queries changed but have not been judged. `queries.txt` now
-holds 17 queries, including the Nolan one, so the next run covers it properly.
+## 11. The words "film" and "movie" poison a query
 
----
+In run 1, "a Tom Hanks movie" returned *Mank*, *The Disaster Artist* and *8MM*.
+All films about making films. It matched "movie", not "Tom Hanks".
 
-## What it all means
-
-Findings 2, 6 and 7 point one way: **embeddings are good at meaning and bad at
-facts.** Filters are the opposite. The design needs both.
-
-Findings 8 and 9 are one problem seen from two sides: **nothing rewards a film
-for being known.**
-
-Finding 10 adds a third side to the same problem. Automatic weighting is only as
-good as the field it hands power to, and a field can look confident by accident.
-Cast and director both prove the method generalises. Both also leak, because a
-name is a fact and facts do not belong in a vector.
+Neither word carries meaning here, and both pull hard towards the film industry.
+A job for the LLM layer: strip them out.
 
 ---
 
-# Next task: a quality term
+# What it all means
 
-Add a term to the score using `vote_count`, so known films rise and obscure ones
-fall. Fixes 8 and 9 together.
+**Embeddings are good at meaning and bad at facts.** Filters are the opposite.
+The design needs both.
 
-**Keep the weight small,** around 0.1. It should nudge the ranking, not decide
-it.
+Findings 5, 9 and 11 all say the same thing from different directions. A city, a
+person, a year, a genre: these are facts, and a vector can only say "this text
+looks similar". That is why the filter layer is not an improvement to the design.
+It is half of it.
 
-**Use `vote_count` first, not `vote_average`.** Vote count means known. Rating
-means liked. Findings 8 and 9 are both about obscurity, not quality.
-
-**Test it the same way.** Run all sixteen queries with the term off, then on.
-Compare must-appear hits. That number is the measure.
-
-**Watch for:** every query returning the same blockbusters. If that happens, the
-weight is too high.
+**The automatic weighting is the best idea in the project**, and its weakness is
+the same as its strength. It trusts whichever field looks most certain, and
+certainty can be an accident.
 
 ---
 
-# After that: test the tap loop
+# Next
 
-Nothing here tests the tap loop. Every result above is cold search, which is the
-part that already works.
+**1. Build.** The search is good enough. 88 to 95% on the query types people
+actually use, with the exceptions understood. Further tuning will return less
+each time.
 
-The loop is the product. It needs its own experiment, and it needs no new data.
-
-Two things to settle:
-
-- **Q1.** How much does `liked`, `disliked` and `interested` each count?
-- **Q2.** After a few taps, does the query keep its weight or give way to taste?
-
-**Do not start from nothing.** This is a known problem called **relevance
-feedback**, and Rocchio's algorithm answers both questions:
+**2. The tap loop is untested, and the build is the test.** It cannot be judged
+without a person tapping, so a script cannot answer it. Rocchio's algorithm gives
+starting values for both open questions:
 
 ```
 new query = a * original query
@@ -333,60 +314,48 @@ new query = a * original query
           - c * (average of the disliked)
 ```
 
-Q1 is `b` and `c`. Q2 is `a`. Usual starting values are `b = 0.75` and
-`c = 0.15`. Negative feedback counts for less, because a dislike says much less
-about what you *do* want.
+Usual starting values are `b = 0.75` and `c = 0.15`. Negative feedback counts for
+less, because a dislike says much less about what you do want. Watch for
+**drift**: a few taps pulling the list into one genre with no way back.
 
 Reference: *Introduction to Information Retrieval*, Manning et al., chapter 9.
 Free at [nlp.stanford.edu/IR-book](https://nlp.stanford.edu/IR-book/).
 
-**The known failure is drift.** A few taps pull the list into one genre, and it
-never comes back. Watch for it.
+**3. The confidence floor**, after adding two or three more name queries.
 
-The measure is not written yet. That is the first job.
+**4. The LLM filter layer.** It is not optional. Finding 5 needs two conditions
+held at once, and nothing else in the design can do that.
 
----
-
-# Later: an LLM reads the query
-
-**Do not build it yet, but it is not optional.** Finding 2 shows the cheap
-alternative fails: choosing genres by vector similarity ranks Horror above
-Comedy for "comforting". Mood queries need something that can reason, and
-nothing else in the design can.
-
-The LLM splits a query into three parts. Named films go to the lookup. Hard
-filters cut the set. The leftover meaning text goes to the embedding.
+The LLM splits a query into three parts. Named films go to a lookup, hard filters
+cut the set, the leftover meaning text goes to the embedding.
 
 | Query | What it pulls out |
 | --- | --- |
-| a Tom Hanks film | cast: Tom Hanks |
 | really scary | genre: Horror |
 | something funny and short | genre: Comedy, runtime under 100 |
-| Memories of Murder, Zodiac | film names, send to lookup |
-| Chinese civil war | setting and period |
+| fall in love with a city | setting: a city, tone: appealing |
+| a Tom Hanks film | cast: Tom Hanks, strip "film" |
 
-**Why it waits.** We do not know yet what it has to handle. Build it now and you
-are guessing at the rules. You also cannot tell whether a good result came from
-the embedding or the filter.
+**Three conflicts to handle when building it:**
 
-The queries that fail are the job list. **The experiment writes the spec.**
+- **The filter can take away what the ranking needs.** Pull "Tom Hanks" out as a
+  filter and the leftover text is "movie", which ranks *Man Bites Dog* and
+  *Sex Tape*. The LLM must be able to say there is no meaning text
+- **Confidence needs a big set.** Filter "really scary" down to 738 horror films
+  and every field's gap shrinks. Below a few hundred films the measure stops
+  meaning anything, so fall back to fixed weights
+- **Temperature was tuned on the unfiltered set.** Smaller gaps at the same
+  temperature means a flatter softmax, so the weighting quietly turns itself down
+  at the moment you added a filter to make things better
 
-Later, one server function can parse and embed in the same round trip.
-
----
-
-# Later: shipping the vectors
-
-Seven vector sets must reach the browser, because Finding 4 says the weights
-have to be chosen per query. One baked vector would undo it.
+**5. Shipping.** Seven vector sets must reach the browser, because finding 7 says
+the weights are chosen per query. One baked vector would undo it.
 
 | What | Size |
 | --- | --- |
-| 7 fields, 384 dims, float32 | 54 MB. Too big |
-| Same, as int8 | 13.4 MB. Still heavy |
-| PCA to 128 dims, then int8 | **4.5 MB. Fine** |
+| 7 fields, 384 dims, float32 | 54MB. Too big |
+| Same, as int8 | 13.4MB. Still heavy |
+| PCA to 128 dims, then int8 | **4.5MB. Fine** |
 
-So all seven can ship. Not yet tested for accuracy loss.
-
-**One trap.** The same PCA transform must be used on the query and on the films.
-If they differ, the scores still look fine and mean nothing.
+The same PCA transform must be used on the query and on the films. If they
+differ, the scores still look fine and mean nothing.

@@ -132,7 +132,21 @@ A field that finds something clear takes over. A field that finds nothing gets l
 
 ---
 
-## 7. How to judge a run
+## 7. Quality term
+
+The quality term comes from `vote_count` and `vote_average`. Each is turned into a percentile rank, then the two are averaged. They become percentile ranks because the raw values of these two are highly skewed, and they cannot sit next to a cosine score. 
+
+The search experiments showed `vote_count` alone still let obscure, low-rated films through. Adding `vote_average` rules them out. 
+
+Runs `08-31-1112` and `08-31-1256` showed that adding the quality term to the score gives every film the same bonus regardless of match, so famous films that do not fit rise anyway. Multiplying makes the bonus a share of how well the film already matched, so a poor match gets a small one and a good match gets a larger one. 
+
+The setting: `QUALITY = 0.5`
+
+The details of the experiments are in `03-findings.md` and `progress.md`.
+
+---
+
+## 8. How to judge a run
 
 Queries in `experiments/queries.txt`. Rules in `experiments/query-rules.md`.
 
@@ -151,7 +165,7 @@ Save every run with the settings that made it. Runs go in `experiments/results/`
 
 ---
 
-## 8. If the catalogue needs to grow
+## 9. If the catalogue needs to grow
 
 **Decision: stay at 5,000 for now.** This records why, and what to do if that
 changes.
@@ -210,9 +224,3 @@ than what ships today.
 **What it costs.** The server now holds the vectors and runs a real search, so
 it is no longer one small function. The line "everything runs in the browser" is
 no longer true.
-
-### The order
-
-1. Add the quality term. See whether obscure films stop leaking in
-2. Ship the app at 5,000
-3. Only then ask whether the catalogue is too small, with real queries saying so
