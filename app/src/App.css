@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  background: #1A120D;
+  color: #EDE7DE;
+  font-family: system-ui, sans-serif;
+}
+
+.grid { 
+  display: grid; 
+  grid-template-columns: repeat(6, 1fr);
+  gap: 26px 18px; padding: 40px; 
+}
+
+.card img { 
+  width: 100%; 
+  aspect-ratio: 2/3; 
+  object-fit: cover;
+  border-radius: 4px; 
+  display: block; 
+}
+
+.title { 
+  margin-top: 9px; 
+  font-size: 13px; 
+}
+.year { 
+  font-size: 13px; 
+  color: #8A8177; 
+}
