@@ -15,7 +15,3 @@ wheels/
 data/
 
 notes/revision-list.md
-
-app/node_modules/
-app/dist/
-app/public/vectors.bin
