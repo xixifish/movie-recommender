@@ -26,7 +26,10 @@ places and do not collide.
 
 **Clicking a marker undoes it** and returns the card to normal.
 
-**Hovering a marked card** keeps the marker, and reveals the button of the group that has not been used. A liked film shows its thumb plus the three dots, so it can still be saved. A saved film shows its bookmark plus the thumbs, so it can still be rated.
+**Hovering a marked card** keeps the marker, and reveals the button of the group 
+that has not been used. A liked film shows its thumb plus the three dots, so it 
+can still be saved. A saved film shows its bookmark plus the thumbs, so it can 
+still be rated.
 
 So switching from liked to disliked takes two clicks: one to undo, one to choose
 again. The opposite thumb is not shown. Switching is rare, so this is a fine effort.
@@ -109,20 +112,8 @@ A card can carry both.
 
 ## Large: the grid refreshes
 
-```
-page turn   the grid swings away on its left edge, 3D
-dissolve    opacity only, the baseline the others must beat
-rise        each card fades and lifts, 9ms apart
-deal        cards land like a dealt deck, with rotation
-slide       the whole grid moves sideways
-```
-
-Bench: https://claude.ai/code/artifact/33d93345-a7d2-4472-863f-7c9099848ee9
-
-**Two things to weigh.** Page turn and slide animate one element, so their cost
-does not grow with the number of cards. Rise and deal animate every card, and
-the total is the duration plus the stagger times the card count. Fifty cards at
-9ms adds 450ms on top.
+The animation plan for the grid refreshing is rising. Each card fades and lifts,
+9ms apart. 50 cards at 9ms of stagger is 450ms on top of the duration.
 
 **No spinner.** The rerank runs locally in about 10ms, so nothing is waiting.
 A loading state would say the opposite of what the architecture is for.
