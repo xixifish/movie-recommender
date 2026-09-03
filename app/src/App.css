@@ -28,3 +28,17 @@ body {
   font-size: 13px;
   color: #8a8177;
 }
+
+.marks button {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.marks button.on {
+  background: var(--accent);
+  color: var(--ground);
+  border-color: var(--accent);
+}

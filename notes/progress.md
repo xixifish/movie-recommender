@@ -9,27 +9,27 @@ Updated 31 Aug 2026
 
 ## The product
 
-Type an idea, then get 50 films. Choose `watched` or `interested` on a few films. Press refresh. The list moves closer to the user's taste. Users can save the ones that interest them. No sign in. 
+Type an idea, then get 50 films. Choose `watched` or `interested` on a few films. Press refresh. The list moves closer to the user's taste. Users can save the ones that interest them. No sign in.
 
-The interested-film list can be sent to an email address later. 
+The interested-film list can be sent to an email address later.
 
 ---
 
 ## Settled
 
-| Thing | Setting |
-| --- | --- |
-| Catalogue | 5,000 films |
-| Source | TMDB `discover`, `vote_count.gte=200`, sorted by `vote_count.desc` |
-| Fields | genres, tagline, overview, keywords, cast, director, reviews |
-| Vectors | One per field. Not one text blob |
-| Titles | Not in any vector. Titles will be handled later with another solution |
-| Model | `all-MiniLM-L6-v2`, 384 dims |
-| First load | 50 films |
-| Refresh | Replaces the list. Films already tapped are gone |
-| New query | Starts a fresh round |
-| Saved list | Lost on reload for now |
-| Quality | multiply `0.5 x quality`, `quality` combines `vote_count` and `vote_average` |
+| Thing      | Setting                                                                      |
+| ---------- | ---------------------------------------------------------------------------- |
+| Catalogue  | 5,000 films                                                                  |
+| Source     | TMDB `discover`, `vote_count.gte=200`, sorted by `vote_count.desc`           |
+| Fields     | genres, tagline, overview, keywords, cast, director, reviews                 |
+| Vectors    | One per field. Not one text blob                                             |
+| Titles     | Not in any vector. Titles will be handled later with another solution        |
+| Model      | `all-MiniLM-L6-v2`, 384 dims                                                 |
+| First load | 50 films                                                                     |
+| Refresh    | Replaces the list. Films already tapped are gone                             |
+| New query  | Starts a fresh round                                                         |
+| Saved list | Lost on reload for now                                                       |
+| Quality    | multiply `0.5 x quality`, `quality` combines `vote_count` and `vote_average` |
 
 ---
 
@@ -38,11 +38,11 @@ The interested-film list can be sent to an email address later.
 Designed 1 Sep. The rules are in `docs/04-interface.md`: card, lists, refresh,
 copy, and the three scales of motion.
 
-**One assumption of using the product.** 
+**One assumption of using the product.**
 
-Popcorn is a light tool. Someone arrives, finds one or two films for tonight and leaves. So saves are few by design, and ratings are many, because rating is how they steer the list towards those one or two. 
+Popcorn is a light tool. Someone arrives, finds one or two films for tonight and leaves. So saves are few by design, and ratings are many, because rating is how they steer the list towards those one or two.
 
-That is why `liked` and `disliked` stay on the poster at one click each, while `save` and `overview` fold into one button. Two buttons on a card, not four. 
+That is why `liked` and `disliked` stay on the poster at one click each, while `save` and `overview` fold into one button. Two buttons on a card, not four.
 
 Nothing open. Every case is settled and written down.
 
@@ -65,9 +65,9 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 ## Where it stands
 
 1. Search works for topics and names
-2. Mood search now works, after the quality term. It scores 37/40. 
-3. Automatic weights works well. Each query gets its own field weights, with no rule telling it which field matters. 
-4. Director is a real search angle. The field was added on 27 Aug and works well. 
+2. Mood search now works, after the quality term. It scores 37/40.
+3. Automatic weights works well. Each query gets its own field weights, with no rule telling it which field matters.
+4. Director is a real search angle. The field was added on 27 Aug and works well.
 5. LLM is necessary for queries that combine two ideas, like "fall in love with a city", which has never scored above 6/10.
 6. The tap loop is untested. Design started 1 Sep.
 
@@ -99,7 +99,7 @@ give way to taste? Not decided. Needs a test.
 
 Q1 and Q2 both have a standard starting point. This is a known problem called
 **relevance feedback**, and Rocchio's algorithm answers both. See
-`docs/03-findings.md`. Will start from these numbers to test. 
+`docs/03-findings.md`. Will start from these numbers to test.
 
 **Q3. How to measure the loop?** Solved for search: one rule per query, in
 `experiments/query-rules.md`. A candidate for the loop, worked out 1 Sep:
@@ -127,18 +127,18 @@ measure the ranking alone. Two measures, two jobs.
 10,000 is a 9MB download and a 25ms rerank. The blocker is the vote floor,
 which drops from 986 to about 450 and makes Finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-experiment-plan.md`, section 9.
 
-**Q5. Should names be in vectors at all?** The titles of the movies are not included in the vector, but the cast and crew's names are used. 
+**Q5. Should names be in vectors at all?** The titles of the movies are not included in the vector, but the cast and crew's names are used.
 
 See Finding 9 and `docs/02-experiment-plan.md` step 5.
 
-**Q6. The searching results are hard to improve.** Some queries cannot get good results naturally, so it's worth considering whether the product should show a default film set before any query.
+**Q6. The searching results are hard to improve.** Some queries cannot get good results naturally, so it's worth considering whether the product should show a default film set before any query. And if there was a default film set, which films are suitable, the most voted, or a set chosen to be unlike each other?
 
 ---
 
 Two old questions are now answered:
 
-- *Do reviews help?* Yes. 83% coverage, and they earn real weight in run 2.
-- *How should cast be used?* As a normal field. Automatic weights solves it and the people's names search works well. 
+- _Do reviews help?_ Yes. 83% coverage, and they earn real weight in run 2.
+- _How should cast be used?_ As a normal field. Automatic weights solves it and the people's names search works well.
 
 ---
 
