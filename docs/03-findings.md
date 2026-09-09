@@ -5,7 +5,10 @@ What the search experiment showed. The method is in `02-experiment-plan.md`.
 Six runs so far, three of them scored by hand against `experiments/query-rules.md`.
 Raw output is in `experiments/results/`.
 
-Updated 31 Aug 2026
+Finding 12 is different. It comes from the app, from marking films rather than
+typing a query.
+
+Updated 9 Sep 2026
 
 ---
 
@@ -280,6 +283,95 @@ All films about making films. It matched "movie", not "Tom Hanks".
 Neither word carries meaning here, and both pull hard towards the film industry.
 A job for the LLM layer: strip them out.
 
+## 12. A ceiling on any one field
+
+The first measurement from the app, not from the experiment. No words were
+typed. Three Christopher Nolan films were marked, and Refresh was pressed.
+
+The weights came out like this:
+
+| field | weight |
+| --- | --- |
+| overview | 0.094 |
+| keywords | 0.061 |
+| reviews | 0.058 |
+| genres | 0.025 |
+| tagline | 0.027 |
+| cast | 0.023 |
+| **director** | **0.712** |
+
+Director outvoted overview 7.5 to 1. That is not a seven field ranking. It is a
+director ranking with six fields watching.
+
+**Why it happens.** Finding 9 says every film by one director shares an identical
+director vector. So a taste vector built from three Nolan films *is* the Nolan
+vector. Scoring the catalogue then compares that vector to itself:
+
+```
+director top 10 scores:  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+```
+
+Exactly 1, not near it. The gap over the median is 0.659, against 0.317 for
+overview. Temperature 0.1 is sharp, so a gap twice as wide becomes a weight 7.5
+times as heavy.
+
+This is finding 10 seen from the marking side instead of the query side. The
+confidence measure cannot tell "this field sorted the catalogue well" from "this
+field handed the input back".
+
+**It cannot read the reason.** If those three films were marked for their
+time bending plots and not for their director, the weights would be identical.
+Three films by one director always produce that perfect 1.0.
+
+**The fix: a ceiling.** No field may hold more than `W_MAX = 0.35`. Whatever is
+cut off is shared among the rest, in proportion to what they already hold. Every
+field under the cap is multiplied by the same number, so their order and their
+gaps do not change. Only the greedy field moves.
+
+| field | before | after |
+| --- | --- | --- |
+| overview | 0.094 | 0.210 |
+| keywords | 0.061 | 0.134 |
+| reviews | 0.058 | 0.132 |
+| genres | 0.025 | 0.055 |
+| tagline | 0.027 | 0.066 |
+| cast | 0.023 | 0.052 |
+| director | 0.712 | 0.350 |
+
+**What it did to the grid.** Same three marks, 30 films back, before and after:
+
+| | before | after |
+| --- | --- | --- |
+| Nolan | 9 | 9 |
+| Kubrick | 10 | 4 |
+| Ridley Scott | 7 | 4 |
+| distinct directors | 6 | 12 |
+
+Nolan held, and still took positions 1 to 8 and 10. Breaking the clumping cost
+nothing that was working.
+
+What left was filmography: *Paths of Glory*, *The Killing*, *Spartacus*,
+*Barry Lyndon*, *Full Metal Jacket*, *Dr. Strangelove*, *Gladiator*,
+*Black Hawk Down*, *The Martian*. A Roman epic has nothing to do with *Memento*.
+They were there because one director vector dragged the whole shelf in.
+
+What arrived was taste: *The Batman* and *Batman* (1989), from marking
+*Batman Begins*, both by other directors. *Se7en*, *Prisoners* and
+*Minority Report*, which are the dark puzzle thrillers that *Memento* and
+*The Prestige* actually resemble. Also *Blade Runner 2049* and *Dune*.
+
+That is overview and keywords doing work they could not do at 0.094.
+
+**A ceiling, not a floor.** Finding 10 proposed a confidence floor on director,
+to be tuned once more name queries exist. The ceiling is a different tool and
+needs no tuning against examples. A floor asks whether a field deserves to be
+heard. A ceiling only limits how loudly any field may speak, whichever field it
+turns out to be.
+
+**It does not fix the cause.** The confidence measure is still fooled. The
+ceiling only stops the damage from taking the whole grid. Identical vectors
+inside a director remain the real problem, and finding 9 still stands.
+
 ---
 
 # What it all means
@@ -295,6 +387,9 @@ It is half of it.
 **The automatic weighting is the best idea in the project**, and its weakness is
 the same as its strength. It trusts whichever field looks most certain, and
 certainty can be an accident.
+
+Finding 12 is the working answer so far. The measure cannot be made honest, so
+the weight it hands out is capped instead. That is a guard rail, not a cure.
 
 ---
 
@@ -322,6 +417,8 @@ Reference: *Introduction to Information Retrieval*, Manning et al., chapter 9.
 Free at [nlp.stanford.edu/IR-book](https://nlp.stanford.edu/IR-book/).
 
 **3. The confidence floor**, after adding two or three more name queries.
+The ceiling in finding 12 is already in the app and contains the worst of it,
+so this is no longer urgent.
 
 **4. The LLM filter layer.** It is not optional. Finding 5 needs two conditions
 held at once, and nothing else in the design can do that.
