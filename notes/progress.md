@@ -3,13 +3,13 @@
 Where the project stands.
 Source of truth for the product is `docs/01-introduction.md`.
 
-Updated 31 Aug 2026
+Updated 9 Sep 2026
 
 ---
 
 ## The product
 
-Type an idea, then get 50 films. Choose `watched` or `interested` on a few films. Press refresh. The list moves closer to the user's taste. Users can save the ones that interest them. No sign in.
+Type an idea, then get 30 films. Choose `liked` or `disliked` if watched, or `Save` it to watch later. Press refresh. The list moves closer to the user's taste. No sign in.
 
 The interested-film list can be sent to an email address later.
 
@@ -25,11 +25,13 @@ The interested-film list can be sent to an email address later.
 | Vectors    | One per field. Not one text blob                                             |
 | Titles     | Not in any vector. Titles will be handled later with another solution        |
 | Model      | `all-MiniLM-L6-v2`, 384 dims                                                 |
-| First load | 50 films                                                                     |
-| Refresh    | Replaces the list. Films already tapped are gone                             |
+| First load | The code shows 30 for now, `N_SHOWN` in `App.jsx`                            |
+| Refresh    | Replaces the list. Films already seen are gone                               |
 | New query  | Starts a fresh round                                                         |
-| Saved list | Lost on reload for now                                                       |
+| Saved list | Lost on reload for now. Can be sent to email.                                |
 | Quality    | multiply `0.5 x quality`, `quality` combines `vote_count` and `vote_average` |
+| Weight cap | No single field may take more than 0.35 of the vote                          |
+| Marks      | `liked`, `disliked`, `saved`                                                 |
 
 ---
 
@@ -44,8 +46,6 @@ Popcorn is a light tool. Someone arrives, finds one or two films for tonight and
 
 That is why `liked` and `disliked` stay on the poster at one click each, while `save` and `overview` fold into one button. Two buttons on a card, not four.
 
-Nothing open. Every case is settled and written down.
-
 ---
 
 ## Done
@@ -57,6 +57,12 @@ Nothing open. Every case is settled and written down.
 - Search run 1. Fixed weights
 - Search run 2. Automatic per-query weights
 - Search run `2026-08-31`. Added quality term, `Precision@10: 128/170`, `Recall@10: 14/45`. Recall@50 increases to `26/45`.
+- App started 3 Sep. Vite and React. The grid renders, `films.json` and
+  `vectors.bin` load in the browser
+- Tap loop, 4 Sep. Marks, taste vector, scoring, the seen list. One field first
+- All seven fields, 9 Sep. Confidence, automatic weights, quality, combined
+- Weight ceiling, 9 Sep. `W_MAX = 0.35`, see finding 12
+- `tasteFor` now skips films with no text in a field, 9 Sep
 
 Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 
@@ -69,13 +75,19 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 3. Automatic weights works well. Each query gets its own field weights, with no rule telling it which field matters.
 4. Director is a real search angle. The field was added on 27 Aug and works well.
 5. LLM is necessary for queries that combine two ideas, like "fall in love with a city", which has never scored above 6/10.
-6. The tap loop is untested. Design started 1 Sep.
+6. The tap loop works in the browser. Marking three Christopher Nolan films
+   returned nine Nolan films, with no name typed. The same run showed the
+   clumping problem, and the weight ceiling fixed it. Finding 12.
+7. There is no search yet. `scoreField` takes any query vector, but nothing
+   makes one from words.
 
 ---
 
 ## Open questions
 
-**Q1. How much does each tap count?** Three numbers, not two, because `saved`
+**Q1. How much does each tap count?**
+
+Three numbers, not two, because `saved`
 is a signal as well as an outcome.
 
 ```
@@ -94,21 +106,28 @@ A film can be both liked and saved. It then appears in both averages and pulls
 harder, which needs no special case in the code. Disliked and saved together has
 no coherent meaning and should be blocked.
 
-**Q2. Does the query fade?** After a few taps, does the query keep its weight or
-give way to taste? Not decided. Needs a test.
+**Where it is now.** The three numbers are in `App.jsx` and the loop runs on
+them. They have not been tested against anything else, so they are still a
+starting point, not an answer.
+
+**Q2. Does the query fade?**
+
+After a few taps, does the query keep its weight or
+give way to taste? Not decided. Cannot be tested yet, because there is no query.
+The `a` term is not in the code at all. It waits on the search server.
 
 Q1 and Q2 both have a standard starting point. This is a known problem called
 **relevance feedback**, and Rocchio's algorithm answers both. See
 `docs/03-findings.md`. Will start from these numbers to test.
 
-**Q3. How to measure the loop?** Solved for search: one rule per query, in
-`experiments/query-rules.md`. A candidate for the loop, worked out 1 Sep:
+**Q3. How to measure the loop?**
 
-**Of the films a user has not seen, what fraction do they save?** That takes
-their viewing history out of it. A film buff rates a lot and saves little because
-they have seen everything, which says nothing about the ranking.
+Search was easy to judge. Every query has a rule saying which films count as right, in `experiments/query-rules.md`.
 
-Then the real test: **does that fraction rise with each refresh?**
+The loop has no right answer. It depends on the person. So the measure has to work
+without knowing what they want. **Idea**: Count only the films a person has not watched. Of those, what fraction do they save?
+
+**One round tells nothing, but the direction does**
 
 ```
 round 1   saved 2 of 15 unseen
@@ -116,22 +135,30 @@ round 2   saved 4 of 14 unseen
 round 3   saved 6 of 12 unseen
 ```
 
-A rising fraction is the loop working. A flat one means the taps are doing
+A rising fraction means the loop working. A flat one means the taps are doing
 nothing, whatever the list looks like.
 
 **One limit.** This measures the whole product, not the ranking. A low save rate
-could be a bad list, or a card that makes films hard to judge. The scored runs
-measure the ranking alone. Two measures, two jobs.
+could mean:
 
-**Q4. Is 5,000 films the right size?** Set for now. Bigger works technically.
+- the ranking is not learning
+- the ranking is fine, but the card does not show enough to judge a film by
+
+**How to tell those apart, later.** An A/B test.
+
+**Q4. Is 5,000 films the right size?**
+
+Set for now. Bigger works technically.
 10,000 is a 9MB download and a 25ms rerank. The blocker is the vote floor,
 which drops from 986 to about 450 and makes Finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-experiment-plan.md`, section 9.
 
-**Q5. Should names be in vectors at all?** The titles of the movies are not included in the vector, but the cast and crew's names are used.
+**Q5. Should names be in vectors at all?**
 
-See Finding 9 and `docs/02-experiment-plan.md` step 5.
+The titles of the movies are not included in the vector, but the cast and crew's names are used. See Finding 9 and `docs/02-experiment-plan.md` step 5.
 
-**Q6. The searching results are hard to improve.** Some queries cannot get good results naturally, so it's worth considering whether the product should show a default film set before any query. And if there was a default film set, which films are suitable, the most voted, or a set chosen to be unlike each other?
+**Q6. The searching results are hard to improve.**
+
+Some queries cannot get good results naturally, so it's worth considering whether the product should show a default film set before any query. And if there was a default film set, which films are suitable, the most voted, or a set chosen to be unlike each other?
 
 ---
 
@@ -144,11 +171,18 @@ Two old questions are now answered:
 
 ## Next
 
-1. Design and build
-2. Test the tap loop. Answers Q1 and Q2
-3. Try a confidence floor on `director`, after adding more name queries
-4. Build the LLM filter layer
-5. Shrink the vectors and ship
+1. Build the interface, to `docs/04-interface.md`. In order: card shell, rating
+   group, three dot menu, overview panel, the marked look, then Rise
+2. The search server. A small endpoint that turns words into a vector. It
+   unblocks Q2, the LLM filter layer, and half the product
+3. Test the tap loop with a person. Answers Q1
+4. Shrink the vectors and ship. 53MB now, about 4.5MB after PCA and int8
+5. Try a confidence floor on `director`, after adding more name queries. Less
+   urgent now that the ceiling is in
+
+**Two small things inside step 1.** The overview text is not in `films.json`, so
+the overview panel needs its own file from `export.py`. And `app/public/` still
+holds the Vite starter `favicon.svg` and `icons.svg`.
 
 **Baseline: 128/170 (75%), run 2026-08-31-1256.** Every change from now on gets
 measured against that.

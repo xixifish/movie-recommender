@@ -17,14 +17,14 @@ Updated 9 Sep 2026
 Best run: `run-2026-08-31-1256.md`. Seven fields, automatic weights, quality term
 multiplied at 0.5.
 
-| Query type | Score | |
-| --- | --- | --- |
-| name | 19/20 | 95% |
-| mood | 37/40 | 93% |
-| topic | 44/50 | 88% |
-| theme | 28/50 | 56% |
-| catalogue test | 0/10 | |
-| **total** | **128/170** | **75%** |
+| Query type     | Score       |         |
+| -------------- | ----------- | ------- |
+| name           | 19/20       | 95%     |
+| mood           | 37/40       | 93%     |
+| topic          | 44/50       | 88%     |
+| theme          | 28/50       | 56%     |
+| catalogue test | 0/10        |         |
+| **total**      | **128/170** | **75%** |
 
 Must-appear films found: **14/45** in the top 10. But the product shows 50 films,
 not 10, and at 50 it is **26/45**. The test is harder than the product.
@@ -42,7 +42,7 @@ one specific failure, described in finding 5.
 vampire, time travel, alien films, courtroom drama. 44/50.
 
 This was the thing to prove, and it holds. Clean lists, high scores, and the
-failures are films that are *nearly* right rather than nonsense.
+failures are films that are _nearly_ right rather than nonsense.
 
 ## 2. Names, once the fields exist
 
@@ -83,7 +83,7 @@ comforting  vs  heartwarming   0.50
 
 It thinks "comforting" is closer to "disturbing" than to "heartwarming". Feelings
 of the same strength sit near each other whichever way they point. That still
-shows: *The Shining* is still in "a good movie for a bad day".
+shows: _The Shining_ is still in "a good movie for a bad day".
 
 But it costs about three marks now, not thirty.
 
@@ -110,21 +110,20 @@ gritty atmospheric mystery  6/10
 
 Each asks for two things:
 
-| Query | Part one | Part two |
-| --- | --- | --- |
-| fall in love with a city | a city | make it appealing |
-| survival in the wild | staying alive | in nature |
-| gritty atmospheric mystery | a mystery | gritty, heavy |
+| Query                      | Part one      | Part two          |
+| -------------------------- | ------------- | ----------------- |
+| fall in love with a city   | a city        | make it appealing |
+| survival in the wild       | staying alive | in nature         |
+| gritty atmospheric mystery | a mystery     | gritty, heavy     |
 
 The model takes the stronger half and drops the other.
 
 - "fall in love with a city" returns romance. It read "fall in love"
-- "gritty atmospheric mystery" returns *See How They Run*, a comedy whodunit. It
+- "gritty atmospheric mystery" returns _See How They Run_, a comedy whodunit. It
   read "mystery"
 - "Chinese civil war" returned Chinese martial arts films. It read "Chinese"
 
-**"Fall in love with a city" has never worked**, at any setting: 4, then 6, then
-0. It is the clearest case in the project for the filter layer, because a filter
+**"Fall in love with a city" has never worked**, at any setting: 4, then 6, then 0. It is the clearest case in the project for the filter layer, because a filter
 can require both conditions and an embedding cannot.
 
 ---
@@ -173,8 +172,8 @@ Two settings matter:
 ## 8. The quality term: multiply, do not add
 
 **The problem.** Nothing rewarded a film for being known or liked. "something
-funny" returned *Sun in Buckets* and *Cado dalle nubi*. "a good movie for a bad
-day" returned *Date Movie*, rated 4.27, one of the lowest in the catalogue.
+funny" returned _Sun in Buckets_ and _Cado dalle nubi_. "a good movie for a bad
+day" returned _Date Movie_, rated 4.27, one of the lowest in the catalogue.
 
 **The fix.** A quality score from `vote_count` and `vote_average`, each turned
 into a percentile rank so they sit on the same scale as a cosine score, then
@@ -192,7 +191,7 @@ score = similarity + 0.3 * quality      121/170, down from 127
 
 Every film got the same bonus regardless of how well it matched. Famous films
 that did not fit rose anyway: WALL·E and Blade Runner for "heist", Schindler's
-List for "a Tom Hanks movie". *The Shining* appeared in four different queries.
+List for "a Tom Hanks movie". _The Shining_ appeared in four different queries.
 
 This is exactly what the plan warned about: every query returning the same
 blockbusters.
@@ -205,13 +204,13 @@ score = similarity * (1 + 0.5 * quality)     128/170
 
 The bonus is now a share of how well the film already matched. A poor match gets
 a small boost, a good match gets a large one. The blockbusters stayed down, and
-the well-known films that *did* match rose instead.
+the well-known films that _did_ match rose instead.
 
-| | precision | must-appear |
-| --- | --- | --- |
-| no quality term | 127/170 | 12/45 |
-| adding, 0.3 | 121/170 | 18/45 |
-| **multiplying, 0.5** | **128/170** | **14/45** |
+|                      | precision   | must-appear |
+| -------------------- | ----------- | ----------- |
+| no quality term      | 127/170     | 12/45       |
+| adding, 0.3          | 121/170     | 18/45       |
+| **multiplying, 0.5** | **128/170** | **14/45**   |
 
 **It is not a clean win.** By group:
 
@@ -227,16 +226,15 @@ at "fall in love with a city", scored 4 then 0, so the comparison is not clean.
 **Two things changed at once: the setting, and the scorer.** Worth avoiding next
 time.
 
-## 9. A name is a fact, and facts leak
+## 9. The model matches text, not facts
 
-Cast and director both work, and both leak.
+Cast and director both work, and both go wrong in the same way.
 
 ```
 a Tom Hanks movie  ->  See How They Run, directed by Tom George
 ```
 
-A shared first name was enough. The model cannot tell two people apart. It sees
-similar looking text.
+The model cannot tell two people apart. It sees similar looking text.
 
 **Worse: the noise arrives in clumps.** Every film by one director has an
 identical director vector. So when a name scores high by accident, that
@@ -247,9 +245,42 @@ director's whole filmography rises together.
 "alien movies"                ->  every Ridley Scott film scores 0.514
 ```
 
-That is why *The Shining* sits in "a good movie for a bad day", and why *Alien*
+That is why _The Shining_ sits in "a good movie for a bad day", and why _Alien_
 entered "alien movies" for the first time. **The right answer, for the wrong
 reason.**
+
+**It is not only names.** The clump happens wherever many films carry the same
+text. Films whose field is word for word identical to another film's:
+
+| field    | films sharing their text | biggest group |
+| -------- | ------------------------ | ------------- |
+| genres   | 4202                     | 221           |
+| director | 3793                     | 33            |
+| tagline  | 74                       | 3             |
+| cast     | 30                       | 3             |
+| keywords | 11                       | 3             |
+| overview | 8                        | 2             |
+| reviews  | 4                        | 2             |
+
+**Genres is worse than director.** 221 films have a genre field that is the one
+word "Drama", so all 221 score the same, every query. Director's biggest group
+is 33.
+
+The other five are almost all unique, so they cannot clump.
+
+**What would fix it**
+
+```
+The size of the problem:
+
+5,000 films, 2114 directors
+Spielberg 33 films, Eastwood 26, Ridley Scott 25
+63 directors are called John, 52 are called David
+```
+
+1. Limit each director in the list
+2. Do not turn a director into a vector
+3. The LLM filter layer for searching side
 
 ## 10. Confidence can be fake
 
@@ -264,7 +295,9 @@ The measure cannot tell these apart:
 
 Both produce a clean gap between the top 10 and the median.
 
-**The fix, untested.** Director confidence separates cleanly:
+**The fix, untested.** Two fields need it, not one. Director and genres are the
+two that clump, so they are the two that can fake a gap. Director confidence
+separates cleanly:
 
 ```
 a Christopher Nolan movie   0.643
@@ -275,9 +308,12 @@ A floor near 0.5 should keep the wins and cut the noise. But there is only one
 real name query so far, so any cut-off would be fitted to a single example. Add
 more name queries first.
 
+Genres has no number yet. It went over 0.35 once in the best run, at 0.521, which
+the ceiling now catches. Whether it also needs a floor is untested.
+
 ## 11. The words "film" and "movie" poison a query
 
-In run 1, "a Tom Hanks movie" returned *Mank*, *The Disaster Artist* and *8MM*.
+In run 1, "a Tom Hanks movie" returned _Mank_, _The Disaster Artist_ and _8MM_.
 All films about making films. It matched "movie", not "Tom Hanks".
 
 Neither word carries meaning here, and both pull hard towards the film industry.
@@ -285,27 +321,112 @@ A job for the LLM layer: strip them out.
 
 ## 12. A ceiling on any one field
 
-The first measurement from the app, not from the experiment. No words were
-typed. Three Christopher Nolan films were marked, and Refresh was pressed.
+The first measurement from the app, not from the experiment. No words were typed.
+Three Christopher Nolan films were marked, then Refresh.
 
 The weights came out like this:
 
-| field | weight |
-| --- | --- |
-| overview | 0.094 |
-| keywords | 0.061 |
-| reviews | 0.058 |
-| genres | 0.025 |
-| tagline | 0.027 |
-| cast | 0.023 |
+| field        | weight    |
+| ------------ | --------- |
+| overview     | 0.094     |
+| keywords     | 0.061     |
+| reviews      | 0.058     |
+| genres       | 0.025     |
+| tagline      | 0.027     |
+| cast         | 0.023     |
 | **director** | **0.712** |
 
-Director outvoted overview 7.5 to 1. That is not a seven field ranking. It is a
-director ranking with six fields watching.
+Director took 7.5 times more of the vote than overview. That is not a seven field
+ranking. It is a director ranking.
 
-**Why it happens.** Finding 9 says every film by one director shares an identical
-director vector. So a taste vector built from three Nolan films *is* the Nolan
-vector. Scoring the catalogue then compares that vector to itself:
+**Why it happens.** Finding 9 says every film by one director shares the same
+director vector. So a taste vector built from three Nolan films is just the Nolan
+vector again. Scoring then compares that vector with itself:
+
+```
+director top 10 scores:  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+```
+
+Exactly 1, not near it. The gap over the median is 0.659. For overview it is
+0.317. The temperature is 0.1, which is low, so a gap twice as wide turns into a
+weight 7.5 times as heavy.
+
+This is finding 10 again, reached from marking instead of typing. The confidence
+measure cannot tell these two apart:
+
+- this field sorted the catalogue well
+- this field handed the input straight back
+
+**It cannot see the reason.** Say those three films were marked for their time
+bending plots, and the director did not matter at all. The weights would be
+exactly the same. Any three films by one director give that perfect 1.0.
+
+**The fix: a ceiling.** No field may hold more than `W_MAX = 0.35`. What is cut
+off is shared among the others, in proportion to what they already hold. Every
+field under the cap is multiplied by the same number, so their order and their
+gaps stay as they were. Only the field that took too much moves.
+
+| field    | before | after |
+| -------- | ------ | ----- |
+| overview | 0.094  | 0.210 |
+| keywords | 0.061  | 0.134 |
+| reviews  | 0.058  | 0.132 |
+| genres   | 0.025  | 0.055 |
+| tagline  | 0.027  | 0.066 |
+| cast     | 0.023  | 0.052 |
+| director | 0.712  | 0.350 |
+
+**What it did to the grid.** Same three marks, 30 films back:
+
+|                    | before | after |
+| ------------------ | ------ | ----- |
+| Nolan              | 9      | 9     |
+| Kubrick            | 10     | 4     |
+| Ridley Scott       | 7      | 4     |
+| distinct directors | 6      | 12    |
+
+Nolan stayed at 9, and still took positions 1 to 8 and 10. Breaking the clump
+cost nothing that was working.
+
+**What left.** _Paths of Glory_, _The Killing_, _Spartacus_, _Barry Lyndon_,
+_Full Metal Jacket_, _Dr. Strangelove_, _Gladiator_, _Black Hawk Down_ and
+_The Martian_. A Roman epic has nothing to do with _Memento_. They were there
+because one director vector pulled in every film by that director.
+
+**What arrived.** _The Batman_ and _Batman_ (1989), from marking _Batman Begins_,
+both by other directors. _Se7en_, _Prisoners_ and _Minority Report_, which are
+the dark puzzle films that _Memento_ and _The Prestige_ really resemble. Also
+_Blade Runner 2049_ and _Dune_.
+
+That is overview and keywords doing work they could not do at 0.094.
+
+**A ceiling, not a floor.** Finding 10 asked for a floor on director, to be tuned
+once more name queries exist.
+
+```
+floor     ignore a field unless it is very sure
+ceiling   listen to every field, but none may take more than 0.35
+```
+
+A floor has to be set field by field, from data that does not exist yet. A
+ceiling needs no tuning and does not care which field misbehaves.
+
+**It does not fix the cause.** The confidence measure is still fooled. The
+ceiling only stops the damage taking the whole grid. Identical vectors inside one director are still the real problem, and finding 9 still stands.
+
+|          |       |
+| -------- | ----- |
+| overview | 0.094 |
+| keywords | 0.061 |
+| reviews  | 0.058 |
+| genres   | 0.025 |
+| tagline  | 0.027 |
+| cast     | 0.023 |
+| director | 0.712 |
+
+Director outvoted overview 7.5 to 1, dominating scoring.
+
+**Why it happens.** Finding 9 says every film by one director shares an identical director vector. So the director taste vector built from three Nolan films _is_ just the Nolan vector again. Scoring the catalogue then compares that vector to itself:
 
 ```
 director top 10 scores:  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0
@@ -328,37 +449,37 @@ cut off is shared among the rest, in proportion to what they already hold. Every
 field under the cap is multiplied by the same number, so their order and their
 gaps do not change. Only the greedy field moves.
 
-| field | before | after |
-| --- | --- | --- |
-| overview | 0.094 | 0.210 |
-| keywords | 0.061 | 0.134 |
-| reviews | 0.058 | 0.132 |
-| genres | 0.025 | 0.055 |
-| tagline | 0.027 | 0.066 |
-| cast | 0.023 | 0.052 |
-| director | 0.712 | 0.350 |
+| field    | before | after |
+| -------- | ------ | ----- |
+| overview | 0.094  | 0.210 |
+| keywords | 0.061  | 0.134 |
+| reviews  | 0.058  | 0.132 |
+| genres   | 0.025  | 0.055 |
+| tagline  | 0.027  | 0.066 |
+| cast     | 0.023  | 0.052 |
+| director | 0.712  | 0.350 |
 
 **What it did to the grid.** Same three marks, 30 films back, before and after:
 
-| | before | after |
-| --- | --- | --- |
-| Nolan | 9 | 9 |
-| Kubrick | 10 | 4 |
-| Ridley Scott | 7 | 4 |
-| distinct directors | 6 | 12 |
+|                    | before | after |
+| ------------------ | ------ | ----- |
+| Nolan              | 9      | 9     |
+| Kubrick            | 10     | 4     |
+| Ridley Scott       | 7      | 4     |
+| distinct directors | 6      | 12    |
 
 Nolan held, and still took positions 1 to 8 and 10. Breaking the clumping cost
 nothing that was working.
 
-What left was filmography: *Paths of Glory*, *The Killing*, *Spartacus*,
-*Barry Lyndon*, *Full Metal Jacket*, *Dr. Strangelove*, *Gladiator*,
-*Black Hawk Down*, *The Martian*. A Roman epic has nothing to do with *Memento*.
+What left was filmography: _Paths of Glory_, _The Killing_, _Spartacus_,
+_Barry Lyndon_, _Full Metal Jacket_, _Dr. Strangelove_, _Gladiator_,
+_Black Hawk Down_, _The Martian_. A Roman epic has nothing to do with _Memento_.
 They were there because one director vector dragged the whole shelf in.
 
-What arrived was taste: *The Batman* and *Batman* (1989), from marking
-*Batman Begins*, both by other directors. *Se7en*, *Prisoners* and
-*Minority Report*, which are the dark puzzle thrillers that *Memento* and
-*The Prestige* actually resemble. Also *Blade Runner 2049* and *Dune*.
+What arrived was taste: _The Batman_ and _Batman_ (1989), from marking
+_Batman Begins_, both by other directors. _Se7en_, _Prisoners_ and
+_Minority Report_, which are the dark puzzle thrillers that _Memento_ and
+_The Prestige_ actually resemble. Also _Blade Runner 2049_ and _Dune_.
 
 That is overview and keywords doing work they could not do at 0.094.
 
@@ -393,51 +514,48 @@ the weight it hands out is capped instead. That is a guard rail, not a cure.
 
 ---
 
-# Next
+# What the design still needs
 
-**1. Build.** The search is good enough. 88 to 95% on the query types people
-actually use, with the exceptions understood. Further tuning will return less
-each time.
+Three pieces of the design that are worked out but not built. The plan for what
+to do next is in `notes/progress.md`.
 
-**2. The tap loop is untested, and the build is the test.** It cannot be judged
-without a person tapping, so a script cannot answer it. Rocchio's algorithm gives
-starting values for both open questions:
+**1. How much each tap counts.** The loop runs, but the numbers behind it have
+never been tested against anything. They came from Rocchio's algorithm:
 
 ```
 new query = a * original query
           + b * (average of the liked)
+          + s * (average of the saved)
           - c * (average of the disliked)
 ```
 
-Usual starting values are `b = 0.75` and `c = 0.15`. Negative feedback counts for
-less, because a dislike says much less about what you do want. Watch for
+The textbook has three terms. This product has four, because a save is a signal
+as well as an outcome. The code uses `b = 0.75`, `s = 0.6` and `c = 0.15`.
+Negative feedback counts for less, because a dislike says much less about what
+you do want. The reasoning behind `s` is in `notes/progress.md`, Q1. Watch for
 **drift**: a few taps pulling the list into one genre with no way back.
 
-Reference: *Introduction to Information Retrieval*, Manning et al., chapter 9.
+Reference: _Introduction to Information Retrieval_, Manning et al., chapter 9.
 Free at [nlp.stanford.edu/IR-book](https://nlp.stanford.edu/IR-book/).
 
-**3. The confidence floor**, after adding two or three more name queries.
-The ceiling in finding 12 is already in the app and contains the worst of it,
-so this is no longer urgent.
-
-**4. The LLM filter layer.** It is not optional. Finding 5 needs two conditions
+**2. The LLM filter layer.** It is not optional. Finding 5 needs two conditions
 held at once, and nothing else in the design can do that.
 
 The LLM splits a query into three parts. Named films go to a lookup, hard filters
 cut the set, the leftover meaning text goes to the embedding.
 
-| Query | What it pulls out |
-| --- | --- |
-| really scary | genre: Horror |
+| Query                     | What it pulls out                |
+| ------------------------- | -------------------------------- |
+| really scary              | genre: Horror                    |
 | something funny and short | genre: Comedy, runtime under 100 |
-| fall in love with a city | setting: a city, tone: appealing |
-| a Tom Hanks film | cast: Tom Hanks, strip "film" |
+| fall in love with a city  | setting: a city, tone: appealing |
+| a Tom Hanks film          | cast: Tom Hanks, strip "film"    |
 
 **Three conflicts to handle when building it:**
 
 - **The filter can take away what the ranking needs.** Pull "Tom Hanks" out as a
-  filter and the leftover text is "movie", which ranks *Man Bites Dog* and
-  *Sex Tape*. The LLM must be able to say there is no meaning text
+  filter and the leftover text is "movie", which ranks _Man Bites Dog_ and
+  _Sex Tape_. The LLM must be able to say there is no meaning text
 - **Confidence needs a big set.** Filter "really scary" down to 738 horror films
   and every field's gap shrinks. Below a few hundred films the measure stops
   meaning anything, so fall back to fixed weights
@@ -445,14 +563,14 @@ cut the set, the leftover meaning text goes to the embedding.
   temperature means a flatter softmax, so the weighting quietly turns itself down
   at the moment you added a filter to make things better
 
-**5. Shipping.** Seven vector sets must reach the browser, because finding 7 says
+**3. Shipping.** Seven vector sets must reach the browser, because finding 7 says
 the weights are chosen per query. One baked vector would undo it.
 
-| What | Size |
-| --- | --- |
-| 7 fields, 384 dims, float32 | 54MB. Too big |
-| Same, as int8 | 13.4MB. Still heavy |
-| PCA to 128 dims, then int8 | **4.5MB. Fine** |
+| What                        | Size                |
+| --------------------------- | ------------------- |
+| 7 fields, 384 dims, float32 | 54MB. Too big       |
+| Same, as int8               | 13.4MB. Still heavy |
+| PCA to 128 dims, then int8  | **4.5MB. Fine**     |
 
 The same PCA transform must be used on the query and on the films. If they
 differ, the scores still look fine and mean nothing.
