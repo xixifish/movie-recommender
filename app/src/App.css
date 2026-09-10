@@ -1,22 +1,26 @@
 body {
-  margin: 0;
-  background: #1a120d;
-  color: #ede7de;
+  background: var(--ground);
+  color: var(--ink);
   font-family: system-ui, sans-serif;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 26px 18px;
   padding: 40px;
+}
+
+.poster {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .card img {
   width: 100%;
   aspect-ratio: 2/3;
   object-fit: cover;
-  border-radius: 4px;
   display: block;
 }
 
@@ -26,18 +30,28 @@ body {
 }
 .year {
   font-size: 13px;
-  color: #8a8177;
+  color: var(--dim);
 }
 
-.marks button {
-  background: none;
+.rating {
+  position: absolute;
+  bottom: 10px;
+  left: 50%; /* moves the left edge to the middle*/
+  transform: translate(-50%); /*pulls the button back by half its own width*/
+  display: flex;
+  gap: 6px;
+}
+
+.rating button {
+  background: rgba(0, 0, 0, 0.55);
   border: 1px solid var(--line);
-  color: var(--dim);
+  color: var(--ink);
   padding: 5px 10px;
+  border-radius: 3px;
   cursor: pointer;
 }
 
-.marks button.on {
+.rating button.on {
   background: var(--accent);
   color: var(--ground);
   border-color: var(--accent);

@@ -95,22 +95,28 @@ export default function App() {
               >
                 <div className="poster">
                   <img src={IMG + f.p} alt={f.t} />
+                  <div className="rating">
+                    {ratings[i] !== "down" && (
+                      <button
+                        className={ratings[i] === "up" ? "on" : undefined}
+                        onClick={() => rate(i, "up")}
+                      >
+                        like
+                      </button>
+                    )}
+                    {ratings[i] !== "up" && (
+                      <button
+                        className={ratings[i] === "down" ? "on" : undefined}
+                        onClick={() => rate(i, "down")}
+                      >
+                        no
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="title">{f.t}</div>
                 <div className="year">{f.y}</div>
                 <div className="marks">
-                  <button
-                    className={ratings[i] === "up" ? "on" : undefined}
-                    onClick={() => rate(i, "up")}
-                  >
-                    like
-                  </button>
-                  <button
-                    className={ratings[i] === "down" ? "on" : undefined}
-                    onClick={() => rate(i, "down")}
-                  >
-                    no
-                  </button>
                   <button
                     className={saved[i] === true ? "on" : undefined}
                     onClick={() => toggleSave(i)}
