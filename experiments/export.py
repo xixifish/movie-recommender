@@ -20,7 +20,11 @@ masks = {f: "".join("1" if r[f] else "0" for r in rows) for f in FIELDS}
 
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "films.json").write_text(json.dumps(
-    {"fields": FIELDS, "films": films, "masks": masks}))
+    {"fields": FIELDS, "films": films, "masks": masks}
+))
+(OUT / "overviews.json").write_text(json.dumps(
+    [r["overview"] for r in rows]
+))
 
 blocks = [np.load(DATA / f"vec_{f}.npy").astype(np.float32) for f in FIELDS]
 np.concatenate(blocks).tofile(OUT / "vectors.bin")

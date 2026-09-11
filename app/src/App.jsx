@@ -1,3 +1,11 @@
+import {
+  THUMB_UP,
+  THUMB_DOWN,
+  ICON_CLOSE,
+  ICON_DOTS,
+  ICON_INFO,
+  ICON_SAVE,
+} from "./icons.jsx";
 import { useState, useEffect } from "react";
 import "./App.css";
 
@@ -5,17 +13,6 @@ import { N, scoreAll } from "./rank.js";
 
 const IMG = "https://image.tmdb.org/t/p/w185";
 const N_SHOWN = 30;
-
-const THUMB_UP = (
-  <svg viewBox="0 0 16 16">
-    <path d="M9.99992 3.91992L9.33325 6.66658H13.2199C13.4269 6.66658 13.6311 6.71478 13.8162 6.80735C14.0013 6.89992 14.1624 7.03432 14.2866 7.19992C14.4108 7.36551 14.4947 7.55775 14.5317 7.7614C14.5688 7.96506 14.5579 8.17454 14.4999 8.37325L12.9466 13.7066C12.8658 13.9835 12.6974 14.2268 12.4666 14.3999C12.2358 14.573 11.9551 14.6666 11.6666 14.6666H2.66659C2.31296 14.6666 1.97382 14.5261 1.72378 14.2761C1.47373 14.026 1.33325 13.6869 1.33325 13.3333V7.99992C1.33325 7.6463 1.47373 7.30716 1.72378 7.05711C1.97382 6.80706 2.31296 6.66658 2.66659 6.66658H4.50659C4.75464 6.66645 4.99774 6.59713 5.20856 6.4664C5.41937 6.33567 5.58953 6.14873 5.69992 5.92659L7.99992 1.33325C8.3143 1.33715 8.62374 1.41203 8.90512 1.55232C9.1865 1.6926 9.43254 1.89466 9.62485 2.14339C9.81717 2.39212 9.9508 2.68109 10.0157 2.98872C10.0807 3.29635 10.0753 3.61468 9.99992 3.91992Z" />
-  </svg>
-);
-const THUMB_DOWN = (
-  <svg viewBox="0 0 16 16">
-    <path d="M6.00011 12.0799L6.66678 9.33325H2.78011C2.57312 9.33325 2.36897 9.28506 2.18383 9.19249C1.99869 9.09992 1.83764 8.96551 1.71344 8.79992C1.58925 8.63432 1.50531 8.44209 1.46828 8.23843C1.43126 8.03478 1.44215 7.8253 1.50011 7.62658L3.05344 2.29325C3.13422 2.0163 3.30265 1.77301 3.53344 1.59992C3.76424 1.42682 4.04495 1.33325 4.33344 1.33325H13.3334C13.6871 1.33325 14.0262 1.47373 14.2763 1.72378C14.5263 1.97382 14.6668 2.31296 14.6668 2.66659V7.99992C14.6668 8.35354 14.5263 8.69268 14.2763 8.94273C14.0262 9.19278 13.6871 9.33325 13.3334 9.33325H11.4934C11.2454 9.33338 11.0023 9.40271 10.7915 9.53344C10.5807 9.66417 10.4105 9.85111 10.3001 10.0733L8.00011 14.6666C7.68573 14.6627 7.37628 14.5878 7.09491 14.4475C6.81353 14.3072 6.56749 14.1052 6.37517 13.8564C6.18286 13.6077 6.04923 13.3187 5.98429 13.0111C5.91934 12.7035 5.92475 12.3852 6.00011 12.0799Z" />
-  </svg>
-);
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
@@ -27,6 +24,11 @@ export default function App() {
   const [seen, setSeen] = useState({}); // Filter out all the films has been recommended
   const [masks, setMasks] = useState(null);
 
+  const [menuOpen, setMenuOpen] = useState(null); // index of the open card, or null
+
+  const [overviews, setOverviews] = useState(null); // loaded on first open
+  const [overviewOpen, setOverviewOpen] = useState(null); // index or null
+
   // Up or down a film
   function rate(i, kind) {
     setRatings((r) => ({ ...r, [i]: r[i] === kind ? undefined : kind }));
@@ -35,6 +37,44 @@ export default function App() {
   // Save a film
   function toggleSave(i) {
     setSaved((s) => ({ ...s, [i]: s[i] ? undefined : true }));
+  }
+
+  // The button group in the top right corner of a card
+  function corner(i) {
+    if (overviewOpen === i)
+      return (
+        <button className="on" onClick={() => setOverviewOpen(null)}>
+          {ICON_INFO}
+        </button>
+      );
+
+    if (menuOpen === i)
+      return (
+        <>
+          <button className="on" onClick={() => setMenuOpen(null)}>
+            {ICON_CLOSE}
+          </button>
+          <button onClick={() => openOverview(i)}>{ICON_INFO}</button>
+          <button
+            className={saved[i] ? "on" : undefined}
+            onClick={() => {
+              toggleSave(i);
+              setMenuOpen(null);
+            }}
+          >
+            {ICON_SAVE}
+          </button>
+        </>
+      );
+
+    if (saved[i])
+      return (
+        <button className="on" onClick={() => toggleSave(i)}>
+          {ICON_SAVE}
+        </button>
+      );
+
+    return <button onClick={() => setMenuOpen(i)}>{ICON_DOTS}</button>;
   }
 
   // Refresh
@@ -61,6 +101,17 @@ export default function App() {
     // Task 4: Show the new top 30 films
     setShown(order);
     setSeen((s) => ({ ...s, ...Object.fromEntries(order.map((i) => [i, true])) }));
+  }
+
+  // Open one overview
+  function openOverview(i) {
+    if (overviews === null) {
+      fetch("/overviews.json")
+        .then((res) => res.json())
+        .then(setOverviews);
+    }
+    setOverviewOpen(i);
+    setMenuOpen(null);
   }
 
   // Load all the vectors of 5,000 films
@@ -104,7 +155,11 @@ export default function App() {
                 data-rating={ratings[i]}
                 data-saved={saved[i] || undefined}
               >
-                <div className="poster">
+                <div
+                  className={
+                    menuOpen === i || overviewOpen === i ? "poster open" : "poster"
+                  }
+                >
                   <img src={IMG + f.p} alt={f.t} />
                   <div className="rating">
                     {ratings[i] !== "down" && (
@@ -124,17 +179,15 @@ export default function App() {
                       </button>
                     )}
                   </div>
+                  <div className="menu">{corner(i)}</div>
+                  {overviewOpen === i && (
+                    <div className="overview">
+                      <p>{overviews ? overviews[i] : ""}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="title">{f.t}</div>
                 <div className="year">{f.y}</div>
-                <div className="marks">
-                  <button
-                    className={saved[i] === true ? "on" : undefined}
-                    onClick={() => toggleSave(i)}
-                  >
-                    save
-                  </button>
-                </div>
               </div>
             );
           })}

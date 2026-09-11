@@ -15,6 +15,25 @@ body {
   position: relative;
   border-radius: 4px;
   overflow: hidden;
+  isolation: isolate;
+  clip-path: inset(0 round 4px);
+}
+
+.poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line);
+  border-radius: inherit;
+  pointer-events: none;
+  transition:
+    border-color 120ms,
+    background 120ms;
+}
+
+.poster:hover::before {
+  border-color: var(--line-strong);
+  background: rgba(29, 17, 11, 0.25);
 }
 
 .card img {
@@ -29,6 +48,7 @@ body {
   font-size: 13px;
 }
 .year {
+  margin-top: 4px;
   font-size: 13px;
   color: var(--dim);
 }
@@ -42,7 +62,22 @@ body {
   gap: 16px;
 }
 
-.rating button {
+.menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1;
+}
+
+.menu button {
+  transform: translateY(-6px);
+}
+
+.rating button,
+.menu button {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -53,22 +88,70 @@ body {
   border: none;
   color: var(--white);
   cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
 }
 
-.rating button svg {
+.rating button:nth-child(2) {
+  transition-delay: 30ms;
+}
+
+.poster:hover button,
+.poster.open button,
+.poster button.on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rating button svg,
+.menu button svg {
   width: 16px;
   height: 16px;
+  stroke-width: 1.2;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.rating button.on {
+.rating button.on,
+.menu button.on {
   background: var(--tapped-dark);
 }
 
-.rating button.on svg {
+.rating button.on svg,
+.menu button.on svg {
   fill: var(--accent);
   stroke: none;
+}
+
+.menu button.on svg.line {
+  fill: none;
+  stroke: var(--accent);
+}
+
+.overview {
+  position: absolute;
+  inset: -1px;
+  padding: 14px 12px;
+  padding-top: 58px;
+  background-color: rgba(29, 17, 11, 0.9);
+  border-radius: 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-y: auto;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px); /*for older safari*/
+}
+
+.overview p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10;
+  line-clamp: 10;
+  overflow: hidden;
 }
