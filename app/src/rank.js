@@ -48,11 +48,11 @@ function tasteFor(ctx, iField) {
       // Record the number of liked film to calculate the average vector later
       nUp++;
       // Add all the vectors of the `iField` of liked films
-      addInto(liked, vecFor(iField, i));
+      addInto(liked, vecFor(ctx, iField, i));
     }
     if (ctx.ratings[key] === "down") {
       nDown++;
-      addInto(disliked, vecFor(iField, i));
+      addInto(disliked, vecFor(ctx, iField, i));
     }
   }
 

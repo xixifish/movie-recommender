@@ -1,13 +1,13 @@
 :root {
   --ground: #1a120d;
   --line: rgba(239, 219, 209, 0.12);
-  --line-strong: rgba(239, 209, 219);
+  --line-strong: rgba(239, 219, 209, 1);
   --ink: #efdbd1;
   --dim: #8a8177;
   --accent: #ff5700;
   --white: #ffffff;
-  --display: "Bricolage Grotesque", Georgia, serif;
-  --body: "Archivo", system-ui, sans-serif;
+  --display: "Bricolage Grotesque Variable", Georgia, serif;
+  --body: "Archivo Variable", system-ui, sans-serif;
   --tapped-dark: #463933;
 
   color-scheme: dark;
@@ -40,5 +40,5 @@ textarea {
 body {
   background: var(--ground);
   color: var(--ink);
-  font-family: system-ui, sans-serif;
+  font-family: var(--body);
 }

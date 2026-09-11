@@ -41,40 +41,46 @@ export default function App() {
 
   // The button group in the top right corner of a card
   function corner(i) {
+    const open = menuOpen === i;
+
+    let first;
     if (overviewOpen === i)
-      return (
+      first = (
         <button className="on" onClick={() => setOverviewOpen(null)}>
           {ICON_INFO}
         </button>
       );
-
-    if (menuOpen === i)
-      return (
-        <>
-          <button className="on" onClick={() => setMenuOpen(null)}>
-            {ICON_CLOSE}
-          </button>
-          <button onClick={() => openOverview(i)}>{ICON_INFO}</button>
-          <button
-            className={saved[i] ? "on" : undefined}
-            onClick={() => {
-              toggleSave(i);
-              setMenuOpen(null);
-            }}
-          >
-            {ICON_SAVE}
-          </button>
-        </>
+    else if (open)
+      first = (
+        <button className="on" onClick={() => setMenuOpen(null)}>
+          {ICON_CLOSE}
+        </button>
       );
-
-    if (saved[i])
-      return (
+    else if (saved[i])
+      first = (
         <button className="on" onClick={() => toggleSave(i)}>
           {ICON_SAVE}
         </button>
       );
+    else first = <button onClick={() => setMenuOpen(i)}>{ICON_DOTS}</button>;
 
-    return <button onClick={() => setMenuOpen(i)}>{ICON_DOTS}</button>;
+    return (
+      <>
+        {first}
+        <button className={open ? undefined : "gone"} onClick={() => openOverview(i)}>
+          {ICON_INFO}
+        </button>
+        <button
+          className={!open ? "gone" : saved[i] ? "on" : undefined}
+          onClick={() => {
+            toggleSave(i);
+            setMenuOpen(null);
+          }}
+        >
+          {ICON_SAVE}
+        </button>
+      </>
+    );
   }
 
   // Refresh
@@ -162,29 +168,35 @@ export default function App() {
                 >
                   <img src={IMG + f.p} alt={f.t} />
                   <div className="rating">
-                    {ratings[i] !== "down" && (
-                      <button
-                        className={ratings[i] === "up" ? "on" : undefined}
-                        onClick={() => rate(i, "up")}
-                      >
-                        {THUMB_UP}
-                      </button>
-                    )}
-                    {ratings[i] !== "up" && (
-                      <button
-                        className={ratings[i] === "down" ? "on" : undefined}
-                        onClick={() => rate(i, "down")}
-                      >
-                        {THUMB_DOWN}
-                      </button>
-                    )}
+                    <button
+                      className={
+                        ratings[i] === "up"
+                          ? "on"
+                          : ratings[i] === "down"
+                            ? "gone"
+                            : undefined
+                      }
+                      onClick={() => rate(i, "up")}
+                    >
+                      {THUMB_UP}
+                    </button>
+                    <button
+                      className={
+                        ratings[i] === "down"
+                          ? "on"
+                          : ratings[i] === "up"
+                            ? "gone"
+                            : undefined
+                      }
+                      onClick={() => rate(i, "down")}
+                    >
+                      {THUMB_DOWN}
+                    </button>
                   </div>
                   <div className="menu">{corner(i)}</div>
-                  {overviewOpen === i && (
-                    <div className="overview">
-                      <p>{overviews ? overviews[i] : ""}</p>
-                    </div>
-                  )}
+                  <div className={overviewOpen === i ? "overview" : "overview gone"}>
+                    <p>{overviews ? overviews[i] : ""}</p>
+                  </div>
                 </div>
                 <div className="title">{f.t}</div>
                 <div className="year">{f.y}</div>
