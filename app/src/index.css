@@ -1,13 +1,14 @@
 :root {
   --ground: #1a120d;
-  --surface: #241a13;
   --line: rgba(239, 219, 209, 0.15);
   --line-strong: rgba(239, 209, 219);
-  --ink: #ede7de;
+  --ink: #efdbd1;
   --dim: #8a8177;
-  --accent: #f0592b;
+  --accent: #ff5700;
+  --white: #ffffff;
   --display: "Bricolage Grotesque", Georgia, serif;
   --body: "Archivo", system-ui, sans-serif;
+  --tapped-dark: #463933;
 
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;

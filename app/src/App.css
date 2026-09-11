@@ -39,20 +39,36 @@ body {
   left: 50%; /* moves the left edge to the middle*/
   transform: translate(-50%); /*pulls the button back by half its own width*/
   display: flex;
-  gap: 6px;
+  gap: 16px;
 }
 
 .rating button {
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  padding: 5px 10px;
-  border-radius: 3px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  border: none;
+  color: var(--white);
   cursor: pointer;
 }
 
+.rating button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .rating button.on {
-  background: var(--accent);
-  color: var(--ground);
-  border-color: var(--accent);
+  background: var(--tapped-dark);
+}
+
+.rating button.on svg {
+  fill: var(--accent);
+  stroke: none;
 }
