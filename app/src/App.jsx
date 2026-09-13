@@ -152,12 +152,13 @@ export default function App() {
         <p>You have been through everything.</p>
       ) : (
         <div className="grid">
-          {shown.map((i) => {
+          {shown.map((i, n) => {
             const f = films[i];
             return (
               <div
                 className="card"
                 key={f.id}
+                style={{ animationDelay: `${n * 9}ms` }}
                 data-rating={ratings[i]}
                 data-saved={saved[i] || undefined}
               >

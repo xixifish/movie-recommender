@@ -42,3 +42,13 @@ body {
   color: var(--ink);
   font-family: var(--body);
 }
+
+/* Some people turn animation off at the system level */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
