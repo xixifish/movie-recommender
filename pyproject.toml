@@ -5,8 +5,10 @@ description = "Semantic movie search and a tap-to-rerank recommender"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi>=0.141.1",
     "numpy>=2.5.2",
     "python-dotenv>=1.2.3",
     "requests>=2.34.2",
     "sentence-transformers>=6.0.0",
+    "uvicorn[standard]>=0.52.4",
 ]
