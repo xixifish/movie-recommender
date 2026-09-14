@@ -10,6 +10,7 @@ const TEMPERATURE = 0.1;
 const BLEND = 0.8;
 const W_FALLBACK = [0.38, 0.24, 0.14, 0.09, 0.05, 0.05, 0.05];
 const W_MAX = 0.35; // autoWeights cap
+const W_QUERY = 1.0; // `a` in Rocchio, the query's own weight
 
 // Get a film's one field vector
 function vecFor(ctx, iField, iFilm) {
@@ -66,10 +67,13 @@ function tasteFor(ctx, iField) {
     addInto(saveds, vecFor(ctx, iField, i));
   }
 
-  if (nUp + nDown + nSaved === 0) return null;
+  if (nUp + nDown + nSaved === 0 && !ctx.query) return null;
 
+  // Build the taste vector
+  // Combine query, up, down, and saved
   for (let d = 0; d < D; d++) {
     taste[d] =
+      (ctx.query ? W_QUERY * ctx.query[d] : 0) +
       (nUp ? (W_LIKED * liked[d]) / nUp : 0) +
       (nDown ? (W_DISLIKED * disliked[d]) / nDown : 0) +
       (nSaved ? (W_SAVED * saveds[d]) / nSaved : 0);

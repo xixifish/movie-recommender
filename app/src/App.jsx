@@ -5,14 +5,20 @@ import {
   ICON_DOTS,
   ICON_INFO,
   ICON_SAVE,
+  LOGO,
+  ICON_SEARCH,
+  ICON_REFRESH,
+  ICON_SEND,
 } from "./icons.jsx";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 import { N, scoreAll } from "./rank.js";
 
 const IMG = "https://image.tmdb.org/t/p/w185";
 const N_SHOWN = 30;
+
+const EXAMPLES = ["Christopher Nolan", "time travel", "really scary", "funny", "vampire"];
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
@@ -28,6 +34,61 @@ export default function App() {
 
   const [overviews, setOverviews] = useState(null); // loaded on first open
   const [overviewOpen, setOverviewOpen] = useState(null); // index or null
+
+  const [text, setText] = useState(""); // what is typed
+  const [query, setQuery] = useState(null); // the vector it became
+
+  // Hint bars
+  const [dismissed, setDismissed] = useState(() => ({
+    films: localStorage.getItem("hint.films") === "1",
+    saved: localStorage.getItem("hint.saved") === "1",
+  }));
+
+  function dismiss(which) {
+    setDismissed((d) => ({ ...d, [which]: true }));
+    localStorage.setItem(`hint.${which}`, "1");
+  }
+
+  const [tab, setTab] = useState("films");
+  const [savedList, setSavedList] = useState([]);
+
+  const list = tab === "saved" ? savedList : shown;
+
+  function openSaved() {
+    setSavedList(
+      Object.keys(saved)
+        .filter((k) => saved[k])
+        .map(Number),
+    );
+    setTab("saved");
+  }
+
+  async function runSearch(q) {
+    if (!q.trim()) return;
+
+    const res = await fetch("http://localhost:8000/embed", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ q }),
+    });
+
+    const data = await res.json();
+    const v = new Float32Array(data.v);
+
+    setQuery(v);
+    setSeen({}); // a new query starts a fresh round
+    rerank(v, {});
+  }
+
+  function onSubmit(e) {
+    e.preventDefault();
+    runSearch(text);
+  }
+
+  function onChip(q) {
+    setText(q);
+    runSearch(q);
+  }
 
   // Up or down a film
   function rate(i, kind) {
@@ -84,14 +145,14 @@ export default function App() {
   }
 
   // Refresh
-  function rerank() {
+  function rerank(q = query, s = seen) {
     if (!vecs || !masks) return;
 
-    const scores = scoreAll({ vecs, masks, ratings, saved, films });
+    const scores = scoreAll({ vecs, masks, ratings, saved, films, query: q });
     if (scores === null) {
       const next = [];
       for (let i = 0; i < N && next.length < N_SHOWN; i++) {
-        if (!seen[i]) next.push(i);
+        if (!s[i]) next.push(i);
       }
       setShown(next);
       setSeen((s) => ({ ...s, ...Object.fromEntries(next.map((i) => [i, true])) }));
@@ -120,6 +181,9 @@ export default function App() {
     setMenuOpen(null);
   }
 
+  // Send the saved list to an email address. Not built yet.
+  function sendEmail() {}
+
   // Load all the vectors of 5,000 films
   useEffect(() => {
     fetch("/vectors.bin")
@@ -143,16 +207,96 @@ export default function App() {
       .catch((err) => console.log(err));
   }, []);
 
+  // Refresh and jump to the list top
+  const listTop = useRef(null);
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    listTop.current?.scrollIntoView({ block: "start" });
+  }, [shown]);
+
   // If the data is not there, render something else and stop
   if (!films.length || !vecs) return <p>Loading...</p>;
 
   return (
     <>
-      {shown.length === 0 ? (
-        <p>You have been through everything.</p>
+      <header className="top">
+        <div className="logo">
+          {LOGO}
+          <span>POPCORN</span>
+        </div>
+      </header>
+      <section className="hero">
+        <p className="eyebrow">FIND FILMS TO YOUR TASTE</p>
+        <h1>
+          Start with a thought.
+          <br />
+          Mark a few. Get closer.
+        </h1>
+      </section>
+      <div>
+        <form className="search" onSubmit={onSubmit}>
+          <span className="search-icon">{ICON_SEARCH}</span>
+          <input
+            id="q"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Anything you feel like watching"
+          />
+          <button type="submit">Search</button>
+        </form>
+      </div>
+      <div className="chips">
+        {EXAMPLES.map((q) => (
+          <button key={q} onClick={() => onChip(q)}>
+            {q}
+          </button>
+        ))}
+      </div>
+      <div className="section">
+        <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
+        <div className="tabs">
+          <button
+            className={tab === "films" ? "on" : undefined}
+            onClick={() => setTab("films")}
+          >
+            Films
+          </button>
+          <button className={tab === "saved" ? "on" : undefined} onClick={openSaved}>
+            Saved
+          </button>
+        </div>
+      </div>
+      {!dismissed[tab] && (
+        <div className="hint">
+          {tab === "films" ? (
+            <>
+              <span>{THUMB_UP} Liked</span>
+              <span>{THUMB_DOWN} Disliked</span>
+              <span>{ICON_SAVE} Save</span>
+              <p>The more you mark, the closer the next films get.</p>
+            </>
+          ) : (
+            <p className="plain">
+              No sign in needed. Send your saved list to your email.
+            </p>
+          )}
+          <button onClick={() => dismiss(tab)}>Got it</button>
+        </div>
+      )}
+      {list.length === 0 ? (
+        <p className="empty">
+          {tab === "saved"
+            ? "Nothing saved yet. Use the bookmark button on a film you want to keep."
+            : "You have been through everything."}
+        </p>
       ) : (
-        <div className="grid">
-          {shown.map((i, n) => {
+        <div className="grid" ref={listTop}>
+          {list.map((i, n) => {
             const f = films[i];
             return (
               <div
@@ -206,8 +350,12 @@ export default function App() {
           })}
         </div>
       )}
-      <button className="refresh" onClick={rerank}>
-        Refresh
+      <button
+        className="refresh"
+        onClick={tab === "films" ? () => rerank() : sendEmail}
+        aria-label={tab === "films" ? "Refresh" : "Send to email"}
+      >
+        {tab === "films" ? ICON_REFRESH : ICON_SEND}
       </button>
     </>
   );

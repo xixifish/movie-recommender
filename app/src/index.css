@@ -1,13 +1,15 @@
 :root {
-  --ground: #1a120d;
+  --ground: #1d110b;
   --line: rgba(239, 219, 209, 0.12);
   --line-strong: rgba(239, 219, 209, 1);
+  --surface: #29211d;
   --ink: #efdbd1;
-  --dim: #8a8177;
+  --dim: #c7a695;
   --accent: #ff5700;
+  --accent-dark: #ca4500;
   --white: #ffffff;
-  --display: "Bricolage Grotesque Variable", Georgia, serif;
-  --body: "Archivo Variable", system-ui, sans-serif;
+  --display: "Afacad Flux Variable", Georgia, serif;
+  --body: "Source Sans 3 Variable", system-ui, sans-serif;
   --tapped-dark: #463933;
 
   color-scheme: dark;
@@ -21,6 +23,10 @@
 }
 * {
   margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 img,
@@ -50,5 +56,8 @@ body {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }
