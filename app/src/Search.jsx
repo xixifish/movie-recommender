@@ -3,7 +3,17 @@ import "./Search.css";
 
 const EXAMPLES = ["Christopher Nolan", "time travel", "really scary", "funny", "vampire"];
 
-export default function Search({ text, setText, onSubmit, onChip }) {
+export default function Search({ text, setText, runSearch }) {
+  function onSubmit(e) {
+    e.preventDefault();
+    runSearch(text);
+  }
+
+  function onChip(q) {
+    setText(q);
+    runSearch(q);
+  }
+
   return (
     <>
       <header className="top">

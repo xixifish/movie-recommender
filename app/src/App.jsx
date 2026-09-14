@@ -1,21 +1,12 @@
-import {
-  THUMB_UP,
-  THUMB_DOWN,
-  ICON_CLOSE,
-  ICON_DOTS,
-  ICON_INFO,
-  ICON_SAVE,
-  ICON_REFRESH,
-  ICON_SEND,
-} from "./icons.jsx";
+import { THUMB_UP, THUMB_DOWN, ICON_SAVE, ICON_REFRESH, ICON_SEND } from "./icons.jsx";
 import Search from "./Search.jsx";
+import Card from "./Card.jsx";
 
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 import { N, scoreAll } from "./rank.js";
 
-const IMG = "https://image.tmdb.org/t/p/w185";
 const N_SHOWN = 30;
 
 export default function App() {
@@ -78,16 +69,6 @@ export default function App() {
     rerank(v, {});
   }
 
-  function onSubmit(e) {
-    e.preventDefault();
-    runSearch(text);
-  }
-
-  function onChip(q) {
-    setText(q);
-    runSearch(q);
-  }
-
   // Up or down a film
   function rate(i, kind) {
     setRatings((r) => ({ ...r, [i]: r[i] === kind ? undefined : kind }));
@@ -96,50 +77,6 @@ export default function App() {
   // Save a film
   function toggleSave(i) {
     setSaved((s) => ({ ...s, [i]: s[i] ? undefined : true }));
-  }
-
-  // The button group in the top right corner of a card
-  function corner(i) {
-    const open = menuOpen === i;
-
-    let first;
-    if (overviewOpen === i)
-      first = (
-        <button className="on" onClick={() => setOverviewOpen(null)}>
-          {ICON_INFO}
-        </button>
-      );
-    else if (open)
-      first = (
-        <button className="on" onClick={() => setMenuOpen(null)}>
-          {ICON_CLOSE}
-        </button>
-      );
-    else if (saved[i])
-      first = (
-        <button className="on" onClick={() => toggleSave(i)}>
-          {ICON_SAVE}
-        </button>
-      );
-    else first = <button onClick={() => setMenuOpen(i)}>{ICON_DOTS}</button>;
-
-    return (
-      <>
-        {first}
-        <button className={open ? undefined : "gone"} onClick={() => openOverview(i)}>
-          {ICON_INFO}
-        </button>
-        <button
-          className={!open ? "gone" : saved[i] ? "on" : undefined}
-          onClick={() => {
-            toggleSave(i);
-            setMenuOpen(null);
-          }}
-        >
-          {ICON_SAVE}
-        </button>
-      </>
-    );
   }
 
   // Refresh
@@ -222,7 +159,7 @@ export default function App() {
 
   return (
     <>
-      <Search text={text} setText={setText} onSubmit={onSubmit} onChip={onChip} />
+      <Search text={text} setText={setText} runSearch={runSearch} />
       <div className="section">
         <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
         <div className="tabs">
@@ -262,58 +199,24 @@ export default function App() {
         </p>
       ) : (
         <div className="grid" ref={listTop}>
-          {list.map((i, n) => {
-            const f = films[i];
-            return (
-              <div
-                className="card"
-                key={f.id}
-                style={{ animationDelay: `${n * 9}ms` }}
-                data-rating={ratings[i]}
-                data-saved={saved[i] || undefined}
-              >
-                <div
-                  className={
-                    menuOpen === i || overviewOpen === i ? "poster open" : "poster"
-                  }
-                >
-                  <img src={IMG + f.p} alt={f.t} />
-                  <div className="rating">
-                    <button
-                      className={
-                        ratings[i] === "up"
-                          ? "on"
-                          : ratings[i] === "down"
-                            ? "gone"
-                            : undefined
-                      }
-                      onClick={() => rate(i, "up")}
-                    >
-                      {THUMB_UP}
-                    </button>
-                    <button
-                      className={
-                        ratings[i] === "down"
-                          ? "on"
-                          : ratings[i] === "up"
-                            ? "gone"
-                            : undefined
-                      }
-                      onClick={() => rate(i, "down")}
-                    >
-                      {THUMB_DOWN}
-                    </button>
-                  </div>
-                  <div className="menu">{corner(i)}</div>
-                  <div className={overviewOpen === i ? "overview" : "overview gone"}>
-                    <p>{overviews ? overviews[i] : ""}</p>
-                  </div>
-                </div>
-                <div className="title">{f.t}</div>
-                <div className="year">{f.y}</div>
-              </div>
-            );
-          })}
+          {list.map((i, n) => (
+            <Card
+              key={films[i].id}
+              film={films[i]}
+              index={i}
+              order={n}
+              rating={ratings[i]}
+              saved={!!saved[i]}
+              menuOpen={menuOpen === i}
+              overviewOpen={overviewOpen === i}
+              overview={overviews ? overviews[i] : ""}
+              onRate={rate}
+              onSave={toggleSave}
+              onOpenMenu={setMenuOpen}
+              onOpenOverview={openOverview}
+              onCloseOverview={() => setOverviewOpen(null)}
+            />
+          ))}
         </div>
       )}
       <button
