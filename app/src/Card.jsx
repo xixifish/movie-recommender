@@ -9,7 +9,7 @@ import {
 
 import "./Card.css";
 
-const IMG = "https://image.tmdb.org/t/p/w185";
+const IMG = "https://image.tmdb.org/t/p/w342";
 
 export default function Card({
   film,

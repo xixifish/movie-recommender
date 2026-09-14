@@ -12,6 +12,8 @@
   --body: "Source Sans 3 Variable", system-ui, sans-serif;
   --tapped-dark: #463933;
 
+  --page: 1280px;
+
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
 }
@@ -52,6 +54,7 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--body);
+  min-width: 800px;
 }
 
 /* Some people turn animation off at the system level */

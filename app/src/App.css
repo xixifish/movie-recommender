@@ -113,6 +113,12 @@
   overflow-anchor: none;
 }
 
+.section,
+.grid {
+  max-width: var(--page);
+  margin-inline: auto;
+}
+
 .empty {
   display: grid;
   place-items: center;

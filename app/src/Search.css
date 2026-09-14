@@ -36,6 +36,12 @@
   letter-spacing: -0.02em;
 }
 
+.top,
+.hero {
+  max-width: var(--page);
+  margin-inline: auto;
+}
+
 .eyebrow {
   font-size: 13px;
   letter-spacing: 0.12em;

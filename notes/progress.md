@@ -3,7 +3,7 @@
 Where the project stands.
 Source of truth for the product is `docs/01-introduction.md`.
 
-Updated 9 Sep 2026
+Updated 15 Sep 2026
 
 ---
 
@@ -31,6 +31,7 @@ The interested-film list can be sent to an email address later.
 | Saved list | Lost on reload for now. Can be sent to email.                                |
 | Quality    | multiply `0.5 x quality`, `quality` combines `vote_count` and `vote_average` |
 | Weight cap | No single field may take more than 0.35 of the vote                          |
+| Screen     | Desktop only for now. `min-width: 700px`, and the card controls need hover   |
 | Marks      | `liked`, `disliked`, `saved`                                                 |
 
 ---
@@ -63,6 +64,16 @@ That is why `liked` and `disliked` stay on the poster at one click each, while `
 - All seven fields, 9 Sep. Confidence, automatic weights, quality, combined
 - Weight ceiling, 9 Sep. `W_MAX = 0.35`, see finding 12
 - `tasteFor` now skips films with no text in a field, 9 Sep
+- The card, 11 Sep. Hover, rating pair, three dot menu, overview panel, the
+  marked look, and the motion for all of it
+- Rise, 13 Sep. The grid animates on refresh, 9ms apart
+- The embedding server, 13 Sep. FastAPI, `POST /embed`, same model and
+  normalisation as `embed.py`. Checked against `run-2026-08-31-1256`: identical
+  vector, identical weights, identical top 10 for "alien movies"
+- Search, 14 Sep. The query joins the taste vector as Rocchio's `a` term
+- The page, 14 Sep. Header, hero, chips, tabs, both hint bars, the saved list
+- Split into components, 14 and 15 Sep. `Search.jsx`, `Card.jsx`, and a css
+  file each. `App.jsx` went from 362 lines to 231
 
 Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 
@@ -78,8 +89,11 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 6. The tap loop works in the browser. Marking three Christopher Nolan films
    returned nine Nolan films, with no name typed. The same run showed the
    clumping problem, and the weight ceiling fixed it. Finding 12.
-7. There is no search yet. `scoreField` takes any query vector, but nothing
-   makes one from words.
+7. The whole loop works end to end. Type an idea, get films, mark them, press
+   Refresh, the list moves. Typing "alien movies" on a clean page puts
+   _Alien_ (1979) first, which matches the Python run exactly.
+8. Nothing is deployed. `vectors.bin` is 53MB, and the app still points at
+   `localhost:8000`.
 
 ---
 
@@ -171,18 +185,51 @@ Two old questions are now answered:
 
 ## Next
 
-1. Build the interface, to `docs/04-interface.md`. In order: card shell, rating
-   group, three dot menu, overview panel, the marked look, then Rise
-2. The search server. A small endpoint that turns words into a vector. It
-   unblocks Q2, the LLM filter layer, and half the product
-3. Test the tap loop with a person. Answers Q1
-4. Shrink the vectors and ship. 53MB now, about 4.5MB after PCA and int8
-5. Try a confidence floor on `director`, after adding more name queries. Less
-   urgent now that the ceiling is in
+1. **Shrink the vectors.** 53MB now, about 4.5MB after PCA to 128 dims and int8.
+   Everything else waits on this, because 53MB is a minute of blank screen on a
+   normal connection. It is a real experiment, not plumbing: squeezing 384
+   numbers into 128 loses information, and the question is how much.
 
-**Two small things inside step 1.** The overview text is not in `films.json`, so
-the overview panel needs its own file from `export.py`. And `app/public/` still
-holds the Vite starter `favicon.svg` and `icons.svg`.
+   The cheap way to measure it: run the 17 queries before and after and compare
+   the top 10 lists. If the same films come back in the same order, nothing was
+   lost and there is no need to hand score 170 items again.
+
+   The trap, from finding 5 in `docs/03-findings.md`: the same transform must
+   reach the query. The server has to load the same matrix the export used, or
+   the scores still look fine and mean nothing.
+
+2. **Deploy.** Three parts. The app is static files, so Netlify or Vercel, five
+   minutes. The server is harder: it holds a 90MB model, free tiers sleep, and
+   waking up means reloading the model, so the first search after a quiet spell
+   could take ten seconds. Decide whether to pay to keep it warm or show
+   something honest while it wakes. And `localhost:8000` becomes an environment
+   variable.
+
+3. **Before it is public.** TMDB's terms require their logo and a credit line.
+   `assets/tmdb_logo.svg` is already there, waiting for a footer.
+
+4. **Test the tap loop with 5 to 10 people.** Answers Q1, and Q3 says how to
+   measure it. Do it on the live site.
+
+5. **Send the saved list to an email.** The last thing in
+   `docs/01-introduction.md` that has never been built. Needs the server, an
+   email service, and a form for the address. The button and the icon are in;
+   `sendEmail` is empty.
+
+6. **The LLM filter layer.** Finding 5 needs two conditions held at once, and
+   nothing else in the design can do that.
+
+7. **A mobile version.** Two different jobs. The layout half is one media query:
+   less padding, the section row stacking, the `min-width` removed.
+
+   The controls half is a design question, and it is the hard part. Without
+   hover there is no way to mark a film. Buttons always visible means every
+   poster is permanently covered by three circles. Tap to reveal, then tap to
+   choose, makes rating two actions when the whole spec is built on it being
+   one. Worth solving in Figma before any CSS.
+
+8. **A confidence floor on `director` and `genres`**, after adding more name
+   queries. Least urgent, now that the ceiling is in.
 
 **Baseline: 128/170 (75%), run 2026-08-31-1256.** Every change from now on gets
 measured against that.
