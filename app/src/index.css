@@ -16,6 +16,11 @@
   -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+  background: var(--accent);
+  color: var(--white);
+}
+
 *,
 *::before,
 *::after {

@@ -5,11 +5,11 @@ import {
   ICON_DOTS,
   ICON_INFO,
   ICON_SAVE,
-  LOGO,
-  ICON_SEARCH,
   ICON_REFRESH,
   ICON_SEND,
 } from "./icons.jsx";
+import Search from "./Search.jsx";
+
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
@@ -17,8 +17,6 @@ import { N, scoreAll } from "./rank.js";
 
 const IMG = "https://image.tmdb.org/t/p/w185";
 const N_SHOWN = 30;
-
-const EXAMPLES = ["Christopher Nolan", "time travel", "really scary", "funny", "vampire"];
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
@@ -224,39 +222,7 @@ export default function App() {
 
   return (
     <>
-      <header className="top">
-        <div className="logo">
-          {LOGO}
-          <span>POPCORN</span>
-        </div>
-      </header>
-      <section className="hero">
-        <p className="eyebrow">FIND FILMS TO YOUR TASTE</p>
-        <h1>
-          Start with a thought.
-          <br />
-          Mark a few. Get closer.
-        </h1>
-      </section>
-      <div>
-        <form className="search" onSubmit={onSubmit}>
-          <span className="search-icon">{ICON_SEARCH}</span>
-          <input
-            id="q"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Anything you feel like watching"
-          />
-          <button type="submit">Search</button>
-        </form>
-      </div>
-      <div className="chips">
-        {EXAMPLES.map((q) => (
-          <button key={q} onClick={() => onChip(q)}>
-            {q}
-          </button>
-        ))}
-      </div>
+      <Search text={text} setText={setText} onSubmit={onSubmit} onChip={onChip} />
       <div className="section">
         <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
         <div className="tabs">
