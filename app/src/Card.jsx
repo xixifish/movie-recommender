@@ -31,23 +31,47 @@ export default function Card({
     let first;
     if (overviewOpen)
       first = (
-        <button className="on" onClick={onCloseOverview}>
+        <button
+          className="on"
+          onClick={onCloseOverview}
+          title="Film Overview"
+          aria-label="Film Overview"
+        >
           {ICON_INFO}
         </button>
       );
     else if (menuOpen)
       first = (
-        <button className="on" onClick={() => onOpenMenu(null)}>
+        <button
+          className="on"
+          onClick={() => onOpenMenu(null)}
+          title="Close"
+          aria-label="Close"
+        >
           {ICON_CLOSE}
         </button>
       );
     else if (saved)
       first = (
-        <button className="on" onClick={() => onSave(index)}>
+        <button
+          className="on"
+          onClick={() => onSave(index)}
+          title="Save"
+          aria-label="Save"
+        >
           {ICON_SAVE}
         </button>
       );
-    else first = <button onClick={() => onOpenMenu(index)}>{ICON_DOTS}</button>;
+    else
+      first = (
+        <button
+          onClick={() => onOpenMenu(index)}
+          title="Overview & Save"
+          aria-label="Overview & Save"
+        >
+          {ICON_DOTS}
+        </button>
+      );
 
     return (
       <>
@@ -55,6 +79,8 @@ export default function Card({
         <button
           className={menuOpen ? undefined : "gone"}
           onClick={() => onOpenOverview(index)}
+          title="Film Overview"
+          aria-label="Film Overview"
         >
           {ICON_INFO}
         </button>
@@ -64,6 +90,8 @@ export default function Card({
             onSave(index);
             onOpenMenu(null);
           }}
+          title="Save"
+          aria-label="Save"
         >
           {ICON_SAVE}
         </button>
@@ -79,17 +107,21 @@ export default function Card({
       data-saved={saved || undefined}
     >
       <div className={menuOpen || overviewOpen ? "poster open" : "poster"}>
-        <img src={IMG + film.p} alt={film.t} />
+        <img src={IMG + film.p} alt={film.t} loading="lazy" decoding="async" />
         <div className="rating">
           <button
             className={rating === "up" ? "on" : rating === "down" ? "gone" : undefined}
             onClick={() => onRate(index, "up")}
+            title="Like"
+            aria-label="Like"
           >
             {THUMB_UP}
           </button>
           <button
             className={rating === "down" ? "on" : rating === "up" ? "gone" : undefined}
             onClick={() => onRate(index, "down")}
+            title="Dislike"
+            aria-label="Dislike"
           >
             {THUMB_DOWN}
           </button>

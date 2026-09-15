@@ -7,7 +7,7 @@ import "./App.css";
 
 import { N, scoreAll } from "./rank.js";
 
-const N_SHOWN = 30;
+const N_SHOWN = 50;
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
