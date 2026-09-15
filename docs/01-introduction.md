@@ -20,6 +20,8 @@ idea -> movie list -> tap -> movie list gets closer to the user’s taste (start
 
 A search bar by default, providing a few representative queries to guide users to use it. After a simple query, below the search bar, the application returns a ranked movie list.
 
+There will be a default movie list for users who don't have any idea to watch. This default list is selected by some rules to make sure most users could find something represents their taste.
+
 On each recommended movie, the user can tap `liked` or `disliked` if they have watched it, or `save` it if they interest on it.
 
 The tapped movies are marked as grey in the list, the user can keep scrolling to view and tap more, and there is a `refresh` button for the user to access another movie list (more taps, closer to their taste).

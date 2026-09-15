@@ -164,11 +164,11 @@ could mean:
 
 Set for now. Bigger works technically.
 10,000 is a 9MB download and a 25ms rerank. The blocker is the vote floor,
-which drops from 986 to about 450 and makes Finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-experiment-plan.md`, section 9.
+which drops from 986 to about 450 and makes Finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-method.md`, section 9.
 
 **Q5. Should names be in vectors at all?**
 
-The titles of the movies are not included in the vector, but the cast and crew's names are used. See Finding 9 and `docs/02-experiment-plan.md` step 5.
+The titles of the movies are not included in the vector, but the cast and crew's names are used. See Finding 9 and `docs/02-method.md` step 5.
 
 **Q6. The searching results are hard to improve.**
 

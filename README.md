@@ -63,7 +63,7 @@ to **10 out of 10**, with no rule anywhere telling it the query was about a
 person.
 
 The method, step by step, is in
-[`docs/02-experiment-plan.md`](docs/02-experiment-plan.md).
+[`docs/02-method.md`](docs/02-method.md).
 
 ---
 
