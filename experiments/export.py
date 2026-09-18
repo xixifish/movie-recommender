@@ -6,6 +6,7 @@ OUT =  Path(__file__).parent.parent / "app" / "public"
 FIELDS = ["overview", "keywords", "reviews", "genres", "tagline", "cast", "director"]
 
 rows = json.loads((DATA / "texts.json").read_text())
+default = json.loads((DATA / "default.json").read_text())
 
 # Calculate quality percentile rank
 votes = np.array([r["vote_count"] for r in rows], float)
@@ -20,7 +21,7 @@ masks = {f: "".join("1" if r[f] else "0" for r in rows) for f in FIELDS}
 
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "films.json").write_text(json.dumps(
-    {"fields": FIELDS, "films": films, "masks": masks}
+    {"fields": FIELDS, "films": films, "masks": masks, "default": default}
 ))
 (OUT / "overviews.json").write_text(json.dumps(
     [r["overview"] for r in rows]

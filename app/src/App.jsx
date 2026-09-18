@@ -7,7 +7,7 @@ import "./App.css";
 
 import { N, scoreAll } from "./rank.js";
 
-const N_SHOWN = 50;
+const N_SHOWN = 48; // 6 film per row on screen
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
@@ -26,6 +26,8 @@ export default function App() {
 
   const [text, setText] = useState(""); // what is typed
   const [query, setQuery] = useState(null); // the vector it became
+
+  const [defaultList, setDefaultList] = useState([]);
 
   // Hint bars
   const [dismissed, setDismissed] = useState(() => ({
@@ -85,24 +87,25 @@ export default function App() {
 
     const scores = scoreAll({ vecs, masks, ratings, saved, films, query: q });
     if (scores === null) {
-      const next = [];
+      const next = defaultList.filter((i) => !s[i]).slice(0, N_SHOWN);
+      // If the films in next are fewer than N_SHOWN, take the film from the catalogue to fill
       for (let i = 0; i < N && next.length < N_SHOWN; i++) {
-        if (!s[i]) next.push(i);
+        if (!s[i] && !next.includes(i)) next.push(i);
       }
       setShown(next);
-      setSeen((s) => ({ ...s, ...Object.fromEntries(next.map((i) => [i, true])) }));
+      setSeen((prev) => ({ ...prev, ...Object.fromEntries(next.map((i) => [i, true])) }));
       return;
     }
 
-    // Task 3: Sort, filter out seen, take 30
+    // Task 3: Sort, filter out seen, take 50
     const order = [...Array(N).keys()]
       .filter((i) => !seen[i])
       .sort((a, b) => scores[b] - scores[a])
       .slice(0, N_SHOWN);
 
-    // Task 4: Show the new top 30 films
+    // Task 4: Show the new top 50 films
     setShown(order);
-    setSeen((s) => ({ ...s, ...Object.fromEntries(order.map((i) => [i, true])) }));
+    setSeen((prev) => ({ ...prev, ...Object.fromEntries(order.map((i) => [i, true])) }));
   }
 
   // Open one overview
@@ -133,9 +136,10 @@ export default function App() {
     fetch("/films.json")
       .then((res) => res.json())
       .then((data) => {
-        const first = [...Array(N_SHOWN).keys()];
+        const first = data.default.slice(0, N_SHOWN);
         setFilms(data.films);
         setMasks(data.fields.map((f) => data.masks[f]));
+        setDefaultList(data.default);
         setShown(first);
         setSeen(Object.fromEntries(first.map((i) => [i, true])));
       })
