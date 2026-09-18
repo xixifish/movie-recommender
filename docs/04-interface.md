@@ -2,60 +2,54 @@
 
 How the interface behaves, and how it moves. A reference for building.
 
-Updated 1 Sep 2026
+Updated 17 Sep 2026
 
 ---
 
+## The page (desktop)
+
+| Thing     | Setting |
+| --------- | ------- |
+| Min-width | 800px   |
+| Max-width | 1280px  |
+
 ## The card
 
-| Thing    | Setting                                                          |
-| -------- | ---------------------------------------------------------------- |
-| Width    | 180px, about 6 per row on a laptop                               |
-| Rating   | `liked` and `disliked`, bottom centre, always visible, one click |
-| Interest | three dots, top right, opens to close, save, overview            |
-| Overview | a panel over the card, opened and closed by the same button      |
+| Thing    | Setting                                                     |
+| -------- | ----------------------------------------------------------- |
+| Width    | 180px, about 6 per row on a laptop                          |
+| Rating   | `liked` and `disliked`, bottom centre, one click            |
+| Interest | three dots, top right, opens to close, overview, save       |
+| Overview | a panel over the card, opened and closed by the same button |
 
-**Rating is one click, interest is two.** The design reason is in `progress.md`.
+**Hovering card shows the marking buttons.** To simplise the card, collpase `overview` and `save` into one button, not as convenient as rating buttons. The design reason is in `progress.md`.
 
-**Both groups collapse to one button.** After choosing, the button left behind is the one that was chosen. That button then greys the card and becomes its marker, so there is no separate badge.
+**Interaction**:
+
+1. Both button groups collapse to one button after marking to keep the page simple and clean. In addition, it displays the important markings only on a greyed post, to help users glance the list.
+2. **Clicking a marker again undoes it** and returns the card to normal.
 
 **A card can be rated and saved at once.** The two markers sit in different places and do not collide.
-
-**Clicking a marker undoes it** and returns the card to normal.
-
-**Hovering a marked card** keeps the marker, and reveals the button of the group that has not been used. A liked film shows its thumb plus the three dots, so it can still be saved. A saved film shows its bookmark plus the thumbs, so it can still be rated.
-
-So switching from liked to disliked takes two clicks: one to undo, one to choose again. The opposite thumb is not shown. Switching is rare, so this is a fine effort.
 
 ---
 
 ## Lists
 
-**The card behaves the same wherever it appears.** Its look comes from its own
-state, not from which list it is in. So there is one card component, not two.
+The cards in `recommendations` and `saved` are designed same.
 
-**The list only decides what is in it.**
-
-On the Saved tab, a film that has just been unsaved stays where it is until the
-page refreshes. Nothing jumps under the cursor.
+**The saved list can be sent to an email address.**
 
 ---
 
 ## Refresh
 
-**It always works.** Someone may just want a different list without expressing any taste. It is never blocked.
-
-```
-no clicks     the ranking has not moved, so it pages down the same list
-after clicks  the ranking has moved, so it gives a fresh top
-```
+**It always works.** Someone may just want a different list without expressing any taste. It is never blocked. If the user didn't mark any films, refreshing will load the next 50 films from the scored list.
 
 ---
 
 ## Three scales
 
-Motion size should match how big the change is. These must not all run at the
-same speed, or they read as equally important.
+Motion size should match how big the change is. These must not all run at the same speed, or they read as equally important.
 
 | Scale  | What it is                          | Duration     |
 | ------ | ----------------------------------- | ------------ |
@@ -100,7 +94,7 @@ The animation plan for the grid refreshing is rising. Each card fades and lifts,
 
 ## Rules for all of it
 
-**Animate only `transform` and `opacity`.** Both run on the GPU. Animating `width`, `height`, `top` or `left` forces a layout recalculation every frame and will stutter with fifty cards on screen.
+**Animate only `transform` and `opacity`.** Both run on the GPU.
 
 **A second press interrupts the first.** Do not queue. The loop is meant to feel instant, and queued animations make it feel like waiting.
 

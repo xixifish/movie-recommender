@@ -9,9 +9,9 @@ Updated 15 Sep 2026
 
 ## The product
 
-Type an idea, then get 30 films. Choose `liked` or `disliked` if watched, or `Save` it to watch later. Press refresh. The list moves closer to the user's taste. No sign in.
+Type an idea, then get N films. Choose `liked` or `disliked` if watched, or `Save` it to watch later. Press refresh. The list moves closer to the user's taste. No sign-in needed.
 
-The interested-film list can be sent to an email address later.
+The saved list can be sent to an email address later.
 
 ---
 
@@ -25,7 +25,7 @@ The interested-film list can be sent to an email address later.
 | Vectors    | One per field. Not one text blob                                             |
 | Titles     | Not in any vector. Titles will be handled later with another solution        |
 | Model      | `all-MiniLM-L6-v2`, 384 dims                                                 |
-| First load | The code shows 30 for now, `N_SHOWN` in `App.jsx`                            |
+| First load | The code shows 50 for now, `N_SHOWN` in `App.jsx`                            |
 | Refresh    | Replaces the list. Films already seen are gone                               |
 | New query  | Starts a fresh round                                                         |
 | Saved list | Lost on reload for now. Can be sent to email.                                |
@@ -51,7 +51,7 @@ That is why `liked` and `disliked` stay on the poster at one click each, while `
 
 ## Done
 
-- Fetch. 5,000 films, all six fetched fields
+- Fetch. 5,000 films, all six fetched fields (`cast` includes `director`)
 - Data check. All fields have good coverage. The lowest is Reviews 83%
 - Embed. Seven vector files, 384 dims each. `director` was added on 27 Aug,
   pulled from the crew list that was already fetched
@@ -99,61 +99,23 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 
 ## Open questions
 
-**Q1. How much does each tap count?**
-
-Three numbers, not two, because `saved`
-is a signal as well as an outcome.
-
-```
-new query = a * original query
-          + b * (average of the liked)
-          + s * (average of the saved)
-          - c * (average of the disliked)
-```
-
-Starting point: `b = 0.75`, `c = 0.15`, `s = 0.6`. `c` is small because a
-dislike says much less about what someone does want. `s` is a guess, pulled two
-ways: a save is weaker evidence than a like, since it is based on a poster and
-three lines, but the saved list is what the user actually leaves with.
-
-A film can be both liked and saved. It then appears in both averages and pulls
-harder, which needs no special case in the code. Disliked and saved together has
-no coherent meaning and should be blocked.
-
-**Where it is now.** The three numbers are in `App.jsx` and the loop runs on
-them. They have not been tested against anything else, so they are still a
-starting point, not an answer.
-
-**Q2. Does the query fade?**
-
-After a few taps, does the query keep its weight or
-give way to taste? Not decided. Cannot be tested yet, because there is no query.
-The `a` term is not in the code at all. It waits on the search server.
-
-Q1 and Q2 both have a standard starting point. This is a known problem called
-**relevance feedback**, and Rocchio's algorithm answers both. See
-`docs/03-findings.md`. Will start from these numbers to test.
-
 **Q3. How to measure the loop?**
 
 Search was easy to judge. Every query has a rule saying which films count as right, in `experiments/query-rules.md`.
 
-The loop has no right answer. It depends on the person. So the measure has to work
-without knowing what they want. **Idea**: Count only the films a person has not watched. Of those, what fraction do they save?
+The loop has no right answer. It depends on the person. So the measure has to work without knowing what they want. **Idea**: Count only the films a person has not watched. Of those, what fraction do they save?
 
 **One round tells nothing, but the direction does**
 
 ```
-round 1   saved 2 of 15 unseen
-round 2   saved 4 of 14 unseen
-round 3   saved 6 of 12 unseen
+round 1   saved 2 of 15 unwatched
+round 2   saved 4 of 14 unwatched
+round 3   saved 6 of 12 unwatched
 ```
 
-A rising fraction means the loop working. A flat one means the taps are doing
-nothing, whatever the list looks like.
+A rising fraction means the loop is working. A flat one means the taps are doing nothing, whatever the list looks like.
 
-**One limit.** This measures the whole product, not the ranking. A low save rate
-could mean:
+**One limit.** This measures the whole product, not the ranking. A low save rate could mean:
 
 - the ranking is not learning
 - the ranking is fine, but the card does not show enough to judge a film by
@@ -163,23 +125,24 @@ could mean:
 **Q4. Is 5,000 films the right size?**
 
 Set for now. Bigger works technically.
-10,000 is a 9MB download and a 25ms rerank. The blocker is the vote floor,
-which drops from 986 to about 450 and makes Finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-method.md`, section 9.
+10,000 is a 9MB download and a 25ms rerank. The blocker is the vote floor, which drops from 986 to about 450 and makes finding 8 worse. If it needs to grow later, split retrieval from reranking. Worked out in `docs/02-method.md`, section 9.
 
-**Q5. Should names be in vectors at all?**
+**Q6. What should the first list be?**
 
-The titles of the movies are not included in the vector, but the cast and crew's names are used. See Finding 9 and `docs/02-method.md` step 5.
-
-**Q6. The searching results are hard to improve.**
-
-Some queries cannot get good results naturally, so it's worth considering whether the product should show a default film set before any query. And if there was a default film set, which films are suitable, the most voted, or a set chosen to be unlike each other?
+There should be a default film list for the user to mark from, and it should be films unlike each other rather than the most voted (current version), chosen by rules. And the rules haven't been confirmed yet.
 
 ---
 
-Two old questions are now answered:
+Questions now answered:
 
 - _Do reviews help?_ Yes. 83% coverage, and they earn real weight in run 2.
 - _How should cast be used?_ As a normal field. Automatic weights solves it and the people's names search works well.
+- _How much does each tap count?_ The numbers are set. In `rank.js`: W_QUERY:
+  a = 1.00, W_LIKED: b = 0.75, W_SAVED: s = 0.60, W_DISLIKED: c = 0.15, stored
+  as -0.15 and added. Recorded in finding 13, 15 Sep 2026. Whether they are the
+  right numbers is still open, and needs people. See Q3.
+- _Does the query fade?_ No. `W_QUERY = 1.0`, and the query keeps full weight until a new search replaces it. Decided 14 Sep. Marks are averaged, so more marks never outgrow it. See finding 13.
+- _Should names be in vectors at all?_ The titles of the movies are not included in the vector, but the cast and crew's names are used. See finding 9 and `docs/02-method.md` step 5.
 
 ---
 
@@ -198,38 +161,44 @@ Two old questions are now answered:
    reach the query. The server has to load the same matrix the export used, or
    the scores still look fine and mean nothing.
 
-2. **Deploy.** Three parts. The app is static files, so Netlify or Vercel, five
+2. **Build the default film list.** Q6 decided it: films unlike each other, not the most voted. The rules are worked out but not confirmed:
+   - Two vote floors, 3000 for older films and 1500 for films since 2020
+   - Rating at least 7.0
+   - At most one film per director, caps per genre and per decade, and a quota of recent films.
+   - Then greedy "pick the film least like everything chosen so far".
+   - Build 250, so five screens of 50 can page through it with no repeats.
+
+3. **Deploy.** Three parts. The app is static files, so Netlify or Vercel, five
    minutes. The server is harder: it holds a 90MB model, free tiers sleep, and
    waking up means reloading the model, so the first search after a quiet spell
    could take ten seconds. Decide whether to pay to keep it warm or show
    something honest while it wakes. And `localhost:8000` becomes an environment
    variable.
 
-3. **Before it is public.** TMDB's terms require their logo and a credit line.
+4. **Before it is public.** TMDB's terms require their logo and a credit line.
    `assets/tmdb_logo.svg` is already there, waiting for a footer.
 
-4. **Test the tap loop with 5 to 10 people.** Answers Q1, and Q3 says how to
-   measure it. Do it on the live site.
+5. **Test the tap loop with 5 to 10 people.** Tests whether the four tap
+   numbers are right. Q3 says how to measure it. Do it on the live site.
 
-5. **Send the saved list to an email.** The last thing in
+6. **Send the saved list to an email.** The last thing in
    `docs/01-introduction.md` that has never been built. Needs the server, an
    email service, and a form for the address. The button and the icon are in;
    `sendEmail` is empty.
 
-6. **The LLM filter layer.** Finding 5 needs two conditions held at once, and
+7. **The LLM filter layer.** Finding 5 needs two conditions held at once, and
    nothing else in the design can do that.
 
-7. **A mobile version.** Two different jobs. The layout half is one media query:
+8. **A mobile version.** Two different jobs. The layout half is one media query:
    less padding, the section row stacking, the `min-width` removed.
 
    The controls half is a design question, and it is the hard part. Without
-   hover there is no way to mark a film. Buttons always visible means every
-   poster is permanently covered by three circles. Tap to reveal, then tap to
-   choose, makes rating two actions when the whole spec is built on it being
-   one. Worth solving in Figma before any CSS.
+   hover there is no way to mark a film.
 
-8. **A confidence floor on `director` and `genres`**, after adding more name
+9. **A confidence floor on `director` and `genres`**, after adding more name
    queries. Least urgent, now that the ceiling is in.
+
+10. Consider adding TV shows to the catalogue
 
 **Baseline: 128/170 (75%), run 2026-08-31-1256.** Every change from now on gets
 measured against that.

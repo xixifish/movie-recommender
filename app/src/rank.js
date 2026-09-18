@@ -53,6 +53,7 @@ function tasteFor(ctx, iField) {
     }
     if (ctx.ratings[key] === "down") {
       nDown++;
+      // Add all the vectors of the `iField` of disliked films
       addInto(disliked, vecFor(ctx, iField, i));
     }
   }
@@ -64,6 +65,7 @@ function tasteFor(ctx, iField) {
     if (!has(ctx, iField, i)) continue;
 
     nSaved++;
+    // Add all the vectors of the `iField` of saved films
     addInto(saveds, vecFor(ctx, iField, i));
   }
 
@@ -71,6 +73,7 @@ function tasteFor(ctx, iField) {
 
   // Build the taste vector
   // Combine query, up, down, and saved
+  // query is one vector, so it has to be combined with each `iField` vector of the marked films
   for (let d = 0; d < D; d++) {
     taste[d] =
       (ctx.query ? W_QUERY * ctx.query[d] : 0) +

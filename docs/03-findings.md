@@ -411,14 +411,14 @@ new query = a * the typed query
 
 In `rank.js`:
 
-a = 1.00 W_QUERY
-b = 0.75 W_LIKED
-s = 0.60 W_SAVED
-c = 0.15 W_DISLIKED, stored as -0.15 and added.
+- a = 1.00 W_QUERY
+- b = 0.75 W_LIKED
+- s = 0.60 W_SAVED
+- c = 0.15 W_DISLIKED, stored as -0.15 and added.
 
 **Why these sizes.** A like says the most, so it counts most. A dislike says much less about what someone does want, so it counts least. A save sits between: it is weaker evidence than a like, because it is made from a poster and a short overview.
 
-**The query is one vector, the marks are seven.** A typed query is one piece of text, so the same vector is compared against every field. The mark averages are built per field, because a film's overview and its cast are different things.
+**How to calculate the taste vector from the query and the marked films?** The query is one piece of text, so it is one vector. Each marked film has 7 field vectors. For each field, the marked films' vectors are averaged and the query is added to that average, using the weights above. 7 fields, 7 taste vectors.
 
 **A film with no text in a field is skipped.** The cast average only includes marked films that have a cast.
 
