@@ -430,6 +430,32 @@ In `rank.js`:
 
 **What is not measured.** Whether these 4 numbers are right. They are the textbook's starting values. Answering that needs people, and the method is in `notes/progress.md`, Q3.
 
+## 14 The first default list has a different job
+
+Before anyone types anything, 50 films are on screen. The old first list was the catalogue in vote order, and the films are concentrating in Action, Adventrue, Science Fiction. Besides, older films have accumulated more votes then newer ones, so much more older films appear in this default list.
+
+Someone with no idea marks a few and presses Refresh. The first list's job is to make that Refresh informative. If every film is Marvel-shaped, marking any of them says almost nothing, because those films already sit near each other as vectors.
+
+**New selective rules**
+
+- vote_count >= 3000, or 1500 for films since 2020 recognisable
+- vote_average >= 7.0
+- at most one film per director no clumping
+
+**The method**
+
+Start from the most voted film that clears the floors. Then repeatedly pick the film whose doesn't match the already-chosen in the furthest. Each film is judged by its nearest neighbour, not by an average, so nothing gets in that duplicates something already there.
+
+Similarity comes from the overview vectors, which describe what a film is about.
+
+**No genre or decade caps.** They were tried and dropped. Every genre landed exactly on its cap, which meant the cap choosing the list over the greedy method.
+
+**250 films**
+
+The greedy method produces an order and is sliced into five screens of 50 with no repeats. And after 250 the catalogue takes over.
+
+**Program files:** `experiments/default_list.py` writes `data/default.json`. `export.py` reads it into `films.json`.
+
 ---
 
 # What the design still needs
