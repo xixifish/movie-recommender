@@ -3,12 +3,16 @@ from pathlib import Path
 
 DATA = Path(__file__).parent.parent / "data"
 OUT =  Path(__file__).parent.parent / "app" / "public"
+API  = Path(__file__).parent.parent / "app" / "api"
 FIELDS = ["overview", "keywords", "reviews", "genres", "tagline", "cast", "director"]
 
 rows = json.loads((DATA / "texts.json").read_text())
 default = json.loads((DATA / "default.json").read_text())
 
 pca = json.loads((DATA / "pca.json").read_text())
+
+# To put the pca.json where the function can see
+(API / "pca.json").write_text(json.dumps(pca))
 
 # Calculate quality percentile rank
 votes = np.array([r["vote_count"] for r in rows], float)
