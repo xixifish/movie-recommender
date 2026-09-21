@@ -12,6 +12,7 @@ wheels/
 .env
 
 .DS_Store
-data/
+data/*
+!data/pca.json
 
 notes/revision-list.md
