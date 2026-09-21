@@ -16,6 +16,8 @@ import { N, scoreAll, D } from "./rank.js";
 
 const N_SHOWN = 48; // 6 film per row on screen
 
+const API = import.meta.env.VITE_API || "http://localhost:8000";
+
 export default function App() {
   const [films, setFilms] = useState([]); // films
   const [vecs, setVecs] = useState(null); // vector numbers of all films
@@ -80,7 +82,7 @@ export default function App() {
   async function runSearch(q) {
     if (!q.trim()) return;
 
-    const res = await fetch("http://localhost:8000/embed", {
+    const res = await fetch(`${API}/embed`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ q }),

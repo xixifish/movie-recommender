@@ -30,7 +30,7 @@ app = FastAPI()
 # treats them as different sites and blocks the call without this.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:4173"],
     allow_methods=["POST"],
     allow_headers=["*"],
 )
