@@ -30,6 +30,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:4173",
+        "https://movie-recommender-delta-flame.vercel.app",
         # the live site goes here
     ],
     allow_methods=["POST"],
