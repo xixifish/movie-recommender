@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/embed.py": {
+      "excludeFiles": "{node_modules/**,dist/**,public/**,src/**}"
+    }
+  }
+}
