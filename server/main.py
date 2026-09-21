@@ -12,7 +12,6 @@ import onnxruntime as ort
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 from tokenizers import Tokenizer
 
 HERE = Path(__file__).parent
