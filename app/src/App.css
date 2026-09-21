@@ -111,6 +111,12 @@
   gap: 26px 18px;
   padding: 40px;
   overflow-anchor: none;
+  transition: opacity 150ms;
+}
+
+.grid.dim {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .section,

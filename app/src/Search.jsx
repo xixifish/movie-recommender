@@ -3,7 +3,7 @@ import "./Search.css";
 
 const EXAMPLES = ["alien", "time travel", "really scary", "Christmas", "vampire"];
 
-export default function Search({ text, setText, runSearch, reset }) {
+export default function Search({ text, setText, runSearch, reset, searching }) {
   function onSubmit(e) {
     e.preventDefault();
     runSearch(text);
@@ -39,7 +39,9 @@ export default function Search({ text, setText, runSearch, reset }) {
           onChange={(e) => setText(e.target.value)}
           placeholder="Anything you feel like watching"
         />
-        <button type="submit">Search</button>
+        <button type="submit" disabled={searching}>
+          {searching ? "Searching" : "Search"}
+        </button>
       </form>
       <div className="chips">
         {EXAMPLES.map((q) => (

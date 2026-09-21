@@ -40,6 +40,10 @@ export default function App() {
 
   const skipScroll = useRef(false);
 
+  const [searching, setSearching] = useState(false);
+
+  const [roundSaves, setRoundSaves] = useState({});
+
   // Tap logo to reset the page
   function reset() {
     skipScroll.current = true;
@@ -82,18 +86,26 @@ export default function App() {
   async function runSearch(q) {
     if (!q.trim()) return;
 
-    const res = await fetch(`${API}/embed`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ q }),
-    });
+    setSearching(true);
+    try {
+      const res = await fetch(`${API}/embed`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ q }),
+      });
+      const data = await res.json();
+      const v = new Float32Array(data.v);
 
-    const data = await res.json();
-    const v = new Float32Array(data.v);
-
-    setQuery(v);
-    setSeen({}); // a new query starts a fresh round
-    rerank(v, {});
+      setQuery(v);
+      setRatings({}); // liked and disliked belonged to the old query
+      setRoundSaves({});
+      setSeen({}); // a new query starts a fresh round
+      rerank(v, {}, { ratings: {}, saved: {} });
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSearching(false);
+    }
   }
 
   // Up or down a film
@@ -104,18 +116,34 @@ export default function App() {
   // Save a film
   function toggleSave(i) {
     setSaved((s) => ({ ...s, [i]: s[i] ? undefined : true }));
+    setRoundSaves((s) => ({ ...s, [i]: s[i] ? undefined : true }));
   }
 
   // Refresh
-  function rerank(q = query, alreadyShown = seen) {
+  function rerank(
+    q = query,
+    alreadyShown = seen,
+    marks = { ratings, saved: roundSaves },
+  ) {
     if (!vecs || !masks) return;
 
-    const scores = scoreAll({ vecs, masks, ratings, saved, films, query: q });
+    const marked = (i) => saved[i];
+
+    const scores = scoreAll({
+      vecs,
+      masks,
+      ratings: marks.ratings,
+      saved: marks.saved,
+      films,
+      query: q,
+    });
     if (scores === null) {
-      const next = defaultList.filter((i) => !alreadyShown[i]).slice(0, N_SHOWN);
+      const next = defaultList
+        .filter((i) => !alreadyShown[i] && !marked(i))
+        .slice(0, N_SHOWN);
       // If the films in next are fewer than N_SHOWN, take the film from the catalogue to fill
       for (let i = 0; i < N && next.length < N_SHOWN; i++) {
-        if (!alreadyShown[i] && !next.includes(i)) next.push(i);
+        if (!alreadyShown[i] && !marked(i) && !next.includes(i)) next.push(i);
       }
       setShown(next);
       setSeen((prev) => ({ ...prev, ...Object.fromEntries(next.map((i) => [i, true])) }));
@@ -124,7 +152,7 @@ export default function App() {
 
     // Task 3: Sort, filter out seen, take 50
     const order = [...Array(N).keys()]
-      .filter((i) => !alreadyShown[i])
+      .filter((i) => !alreadyShown[i] && !marked(i))
       .sort((a, b) => scores[b] - scores[a])
       .slice(0, N_SHOWN);
 
@@ -159,6 +187,16 @@ export default function App() {
       const first = data.default.slice(0, N_SHOWN);
       setFilms(data.films);
       setMasks(data.fields.map((f) => data.masks[f]));
+
+      // Bring back what was saved last time, by film id
+      const byId = new Map(data.films.map((f, i) => [f.id, i]));
+      const ids = JSON.parse(localStorage.getItem("saved") || "[]");
+      setSaved(
+        Object.fromEntries(
+          ids.map((id) => [byId.get(id), true]).filter(([i]) => i !== undefined),
+        ),
+      );
+
       setDefaultList(data.default);
       setShown(first);
       setSeen(Object.fromEntries(first.map((i) => [i, true])));
@@ -175,6 +213,15 @@ export default function App() {
     }
     load();
   }, []);
+
+  // remember the saved list between visits, by film id not index
+  useEffect(() => {
+    if (!films.length) return;
+    const ids = Object.keys(saved)
+      .filter((k) => saved[k])
+      .map((k) => films[k].id);
+    localStorage.setItem("saved", JSON.stringify(ids));
+  }, [saved, films]);
 
   // Refresh and jump to the list top
   const listTop = useRef(null);
@@ -197,7 +244,13 @@ export default function App() {
 
   return (
     <>
-      <Search text={text} setText={setText} runSearch={runSearch} reset={reset} />
+      <Search
+        text={text}
+        setText={setText}
+        runSearch={runSearch}
+        reset={reset}
+        searching={searching}
+      />
       <div className="section">
         <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
         <div className="tabs">
@@ -236,7 +289,7 @@ export default function App() {
             : "You have been through everything."}
         </p>
       ) : (
-        <div className="grid" ref={listTop}>
+        <div className={searching ? "grid dim" : "grid"} ref={listTop}>
           {list.map((i, n) => (
             <Card
               key={i}
