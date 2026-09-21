@@ -1,4 +1,11 @@
-import { THUMB_UP, THUMB_DOWN, ICON_SAVE, ICON_REFRESH, ICON_SEND } from "./icons.jsx";
+import {
+  THUMB_UP,
+  THUMB_DOWN,
+  ICON_SAVE,
+  ICON_REFRESH,
+  ICON_SEND,
+  TMDB_LOGO,
+} from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 
@@ -103,7 +110,7 @@ export default function App() {
 
     const scores = scoreAll({ vecs, masks, ratings, saved, films, query: q });
     if (scores === null) {
-      const next = defaultList.filter((i) => !s[i]).slice(0, N_SHOWN);
+      const next = defaultList.filter((i) => !alreadyShown[i]).slice(0, N_SHOWN);
       // If the films in next are fewer than N_SHOWN, take the film from the catalogue to fill
       for (let i = 0; i < N && next.length < N_SHOWN; i++) {
         if (!alreadyShown[i] && !next.includes(i)) next.push(i);
@@ -255,6 +262,15 @@ export default function App() {
       >
         {tab === "films" ? ICON_REFRESH : ICON_SEND}
       </button>
+      <footer className="credit">
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noreferrer">
+          {TMDB_LOGO}
+        </a>
+        <p>
+          This website uses TMDB and the TMDB APIs but is not endorsed, certified, or
+          otherwise approved by TMDB.
+        </p>
+      </footer>
     </>
   );
 }

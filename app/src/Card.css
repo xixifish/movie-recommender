@@ -29,6 +29,11 @@
 .title {
   margin-top: 9px;
   font-size: 13px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 .year {
   margin-top: 4px;

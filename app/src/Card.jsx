@@ -131,7 +131,9 @@ export default function Card({
           <p>{overview}</p>
         </div>
       </div>
-      <div className="title">{film.t}</div>
+      <div className="title" title={film.t}>
+        {film.t}
+      </div>
       <div className="year">{film.y}</div>
     </div>
   );
