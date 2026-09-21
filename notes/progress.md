@@ -3,7 +3,7 @@
 Where the project stands.
 Source of truth for the product is `docs/01-introduction.md`.
 
-Updated 15 Sep 2026
+Updated 21 Sep 2026
 
 ---
 
@@ -19,20 +19,22 @@ The saved list can be sent to an email address later.
 
 | Thing      | Setting                                                                      |
 | ---------- | ---------------------------------------------------------------------------- |
-| Catalogue  | 5,000 films                                                                  |
+| Catalogue  | 4,999 films. One duplicate row removed, `experiments/dedupe.py`              |
 | Source     | TMDB `discover`, `vote_count.gte=200`, sorted by `vote_count.desc`           |
 | Fields     | genres, tagline, overview, keywords, cast, director, reviews                 |
 | Vectors    | One per field. Not one text blob                                             |
 | Titles     | Not in any vector. Titles will be handled later with another solution        |
 | Model      | `all-MiniLM-L6-v2`, 384 dims                                                 |
-| First load | The code shows 50 for now, `N_SHOWN` in `App.jsx`                            |
+| First load | 48 films, six per row at full width. `N_SHOWN` in `App.jsx`                  |
 | Refresh    | Replaces the list. Films already seen are gone                               |
-| New query  | Starts a fresh round                                                         |
-| Saved list | Lost on reload for now. Can be sent to email.                                |
+| New query  | The saved list stays. But ratings and saved from other queries don't score   |
+| Saved list | Kept in the browser, by film id, so it survives a catalogue change           |
 | Quality    | multiply `0.5 x quality`, `quality` combines `vote_count` and `vote_average` |
 | Weight cap | No single field may take more than 0.35 of the vote                          |
 | Screen     | Desktop only for now. `min-width: 700px`, and the card controls need hover   |
 | Marks      | `liked`, `disliked`, `saved`                                                 |
+| Shipped    | 192 dims, int8, 6.7MB. See finding 15                                        |
+| Hosting    | App on Vercel, server on Render. `VITE_API` joins them                       |
 
 ---
 
@@ -75,6 +77,15 @@ That is why `liked` and `disliked` stay on the poster at one click each, while `
 - Split into components, 14 and 15 Sep. `Search.jsx`, `Card.jsx`, and a css
   file each. `App.jsx` went from 362 lines to 231
 
+- Default film list, 21 Sep. 240 films unlike each other, five screens of 48.
+  `experiments/default_list.py`. Finding 14
+- Vectors shrunk, 21 Sep. PCA to 192 dims then int8, 53.8MB to 6.7MB, 92% of the
+  top 10 unchanged. `experiments/shrink.py`. Finding 15
+- Deployed, 21 Sep. App on Vercel, server on Render running the model with ONNX
+  instead of torch. TMDB credit in the footer
+- A new search starts fresh, 21 Sep. Finding 16. The saved list now survives a
+  reload, stored by film id
+
 Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 
 ---
@@ -92,8 +103,10 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 7. The whole loop works end to end. Type an idea, get films, mark them, press
    Refresh, the list moves. Typing "alien movies" on a clean page puts
    _Alien_ (1979) first, which matches the Python run exactly.
-8. Nothing is deployed. `vectors.bin` is 53MB, and the app still points at
-   `localhost:8000`.
+8. It is live. The app is on Vercel, the server on Render, and `vectors.bin`
+   is 6.7MB instead of 53MB. A search takes 2 to 3 seconds, because the free
+   Render plan gives a tenth of a CPU. The server sleeps when unused, so the
+   first search after a quiet spell takes much longer.
 
 ---
 
@@ -141,64 +154,40 @@ Questions now answered:
   a = 1.00, W_LIKED: b = 0.75, W_SAVED: s = 0.60, W_DISLIKED: c = 0.15, stored
   as -0.15 and added. Recorded in finding 13, 15 Sep 2026. Whether they are the
   right numbers is still open, and needs people. See Q3.
-- _Does the query fade?_ No. `W_QUERY = 1.0`, and the query keeps full weight until a new search replaces it. Decided 14 Sep. Marks are averaged, so more marks never outgrow it. See finding 13.
+- _Does the query fade?_ No, and nothing carries into the next search either.
+  Decided 14 Sep that marks would carry across searches. Reversed 21 Sep. See
+  finding 16 for the evidence: searching "really scary" after saving
+  inspirational films returned _The Notebook_ and _The Blind Side_.
 - _Should names be in vectors at all?_ The titles of the movies are not included in the vector, but the cast and crew's names are used. See finding 9 and `docs/02-method.md` step 5.
 
 ---
 
 ## Next
 
-1. **Shrink the vectors.** 53MB now, about 4.5MB after PCA to 128 dims and int8.
-   Everything else waits on this, because 53MB is a minute of blank screen on a
-   normal connection. It is a real experiment, not plumbing: squeezing 384
-   numbers into 128 loses information, and the question is how much.
+Items 1 to 4, shrinking the vectors, the default list, deploying, and the TMDB
+credit, were all done on 21 September. See findings 14, 15 and 16.
 
-   The cheap way to measure it: run the 17 queries before and after and compare
-   the top 10 lists. If the same films come back in the same order, nothing was
-   lost and there is no need to hand score 170 items again.
-
-   The trap, from finding 5 in `docs/03-findings.md`: the same transform must
-   reach the query. The server has to load the same matrix the export used, or
-   the scores still look fine and mean nothing.
-
-2. **Build the default film list.** Q6 decided it: films unlike each other, not the most voted. The rules are worked out but not confirmed:
-   - Two vote floors, 3000 for older films and 1500 for films since 2020
-   - Rating at least 7.0
-   - At most one film per director, caps per genre and per decade, and a quota of recent films.
-   - Then greedy "pick the film least like everything chosen so far".
-   - Build 250, so five screens of 50 can page through it with no repeats.
-
-3. **Deploy.** Three parts. The app is static files, so Netlify or Vercel, five
-   minutes. The server is harder: it holds a 90MB model, free tiers sleep, and
-   waking up means reloading the model, so the first search after a quiet spell
-   could take ten seconds. Decide whether to pay to keep it warm or show
-   something honest while it wakes. And `localhost:8000` becomes an environment
-   variable.
-
-4. **Before it is public.** TMDB's terms require their logo and a credit line.
-   `assets/tmdb_logo.svg` is already there, waiting for a footer.
-
-5. **Test the tap loop with 5 to 10 people.** Tests whether the four tap
+1. **Test the tap loop with 5 to 10 people.** Tests whether the four tap
    numbers are right. Q3 says how to measure it. Do it on the live site.
 
-6. **Send the saved list to an email.** The last thing in
+2. **Send the saved list to an email.** The last thing in
    `docs/01-introduction.md` that has never been built. Needs the server, an
    email service, and a form for the address. The button and the icon are in;
    `sendEmail` is empty.
 
-7. **The LLM filter layer.** Finding 5 needs two conditions held at once, and
+3. **The LLM filter layer.** Finding 5 needs two conditions held at once, and
    nothing else in the design can do that.
 
-8. **A mobile version.** Two different jobs. The layout half is one media query:
+4. **A mobile version.** Two different jobs. The layout half is one media query:
    less padding, the section row stacking, the `min-width` removed.
 
    The controls half is a design question, and it is the hard part. Without
    hover there is no way to mark a film.
 
-9. **A confidence floor on `director` and `genres`**, after adding more name
+5. **A confidence floor on `director` and `genres`**, after adding more name
    queries. Least urgent, now that the ceiling is in.
 
-10. Consider adding TV shows to the catalogue
+6. Consider adding TV shows to the catalogue
 
 **Baseline: 128/170 (75%), run 2026-08-31-1256.** Every change from now on gets
 measured against that.

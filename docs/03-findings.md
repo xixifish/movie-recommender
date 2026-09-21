@@ -8,7 +8,7 @@ Six query runs so far, three of them scored by hand against `experiments/query-r
 Finding 12 is different. It comes from the app, from marking films rather than
 typing a query.
 
-Updated 15 Sep 2026
+Updated 21 Sep 2026
 
 ---
 
@@ -25,7 +25,7 @@ Best run: `run-2026-08-31-1256.md`. Seven fields, automatic weights, quality ter
 | catalogue test | 0/10        |         |
 | **total**      | **128/170** | **75%** |
 
-Must-appear films found: **14/45** in the top 10. But the product shows 50 films, not 10, and at 50 it is **26/45**. The test is harder than the product.
+Must-appear films found: **14/45** in the top 10. But the product shows 48 films, not 10, and at 50 it is **26/45**. The test is harder than the product.
 
 **The core assumption holds.** A vector built from a film's text does return films a person would accept, for the query types people actually use.
 
@@ -222,7 +222,7 @@ The other five are almost all unique, so they cannot clump.
 ```
 The size of the problem:
 
-5,000 films, 2114 directors
+4,999 films, 2114 directors
 Spielberg 33 films, Eastwood 26, Ridley Scott 25
 63 directors are called John, 52 are called David
 ```
@@ -458,6 +458,79 @@ The greedy method produces an order and is sliced into five screens of 50 with n
 
 ---
 
+## 15. PCA must not centre the data
+
+Shipping 7 fields of 384 float32 numbers is 53.8MB. Two compressions bring it
+down: PCA to fewer numbers, int8 to smaller numbers.
+
+The first attempt scored badly. Measured by how many of the top 10 survive,
+against the full precision ranking, on the 17 queries:
+
+| setting              | variance kept | same films |
+| -------------------- | ------------- | ---------- |
+| int8 only, 384 dims  | 100%          | 169/170    |
+| PCA + int8, 128 dims | 82.4%         | 115/170    |
+| PCA + int8, 256 dims | 97.1%         | 119/170    |
+| PCA + int8, 320 dims | 99.3%         | 119/170    |
+
+**int8 is nearly free.** One film changed in 170.
+
+**And the PCA loss was not about dimensions.** At 320 dims it keeps 99.3% of the
+variation and still only scores 119. The problem doesn't come from reducing dims.
+
+**The cause was centring.** PCA normally subtracts the mean before projecting,
+because it is measuring variance and variance is measured around a mean. But cosine
+similarity measures the **angle from the origin**, and centring moves the origin and
+changes every angle.
+
+Removing the mean subtraction:
+
+| dims | with centring | without |
+| ---- | ------------- | ------- |
+| 128  | 115/170       | 139/170 |
+| 192  | 116/170       | 157/170 |
+| 256  | 119/170       | 165/170 |
+
+**Shipped: 192 dims with int8, 6.7MB, 157/170.** 128 saves another 2.2MB and
+loses 19 more films, which is a bad trade for a file that downloads once and is
+then cached. The page went from about a minute to 2 or 3 seconds.
+
+---
+
+## 16. Feedback belongs to the query it was given on
+
+Rocchio's algorithm, in finding 13, refines **one** query. The numbers 0.75 and
+0.6 were chosen for that.
+
+Carrying marks into the next search was tried and it fails. After saving some
+inspirational films, searching "really scary" returned:
+
+```
+The Notebook, Moonlight, The Blind Side, Two Is a Family,
+Catch Me If You Can, My Sister's Keeper, Rain Man
+```
+
+About half the screen. The arithmetic says why: the query counts 1.00, liked
+films 0.75, saved films 0.60. Liked and saved together are 1.35, so the old
+marks outweigh the words just typed.
+
+Storing the saved list in the browser made it worse. Saves now accumulate
+forever, so the pull grows with every save and never shrinks.
+
+**The rule that works:**
+
+```
+a like or a dislike   feedback on the search just done, cleared by a new one
+a save                a lasting list, and feedback only in the round it was made
+```
+
+So a new search clears the ratings and the round's saves, and the saved list
+itself is untouched, because that is what the person came for.
+
+**Taste still builds inside a round.** Mark three horror films from a "really
+scary" search and the next Refresh moves towards them. What does not happen is
+those marks steering an unrelated search an hour later.
+
 # What the design still needs
 
 **1. The LLM filter layer.** It is not optional. Finding 5 needs two conditions held at once, and nothing else in the design can do that.
@@ -485,6 +558,6 @@ The LLM splits a query into three parts. Named films go to a lookup, hard filter
 | --------------------------- | ------------------- |
 | 7 fields, 384 dims, float32 | 54MB. Too big       |
 | Same, as int8               | 13.4MB. Still heavy |
-| PCA to 128 dims, then int8  | **4.5MB. Fine**     |
+| PCA to 192 dims, then int8  | **6.7MB. Shipped**  |
 
-The same PCA transform must be used on the query and on the films. If they differ, the scores still look fine and mean nothing.
+The same PCA transform must be used on the query and on the films. If they differ, the scores still look fine and mean nothing. Done in finding 15, and the PCA must not centre the data.

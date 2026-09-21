@@ -2,19 +2,19 @@
 
 User starts to use the recommender from entering an idea, then get a list of movies. Tap a few of them (liked/disliked, interested), and refresh the list moving closer to the user's taste. No need to sign in.
 
-**Status:** early. Experimenting on the data currently, to see how to improve the recommendations. No app built yet. 
+**Status:** early. Experimenting on the data currently, to see how to improve the recommendations. No app built yet.
 
 ---
 
 ## The idea
 
-Most film sites need users to maintain a long list of movies to recommend. This one doesn't need to sign in, starting from a simple idea. 
+Most film sites need users to maintain a long list of movies to recommend. This one doesn't need to sign in, starting from a simple idea.
 
-Users firstly land on a search box, and after they type something like "vampire" or "something scary", then the movie recommendations appear below. The user could tap a film to mark it **watched** -> **liked** or **disliked**, Or mark it **interested**, which are both signals for reranking the movie list. 
+Users firstly land on a search box, and after they type something like "vampire" or "something scary", then the movie recommendations appear below. The user could tap a film to mark it **watched** -> **liked** or **disliked**, Or mark it **interested**, which are both signals for reranking the movie list.
 
-The interested movies can be saved into another list, and user could choose to send it to their email to watch later. 
+The interested movies can be saved into another list, and user could choose to send it to their email to watch later.
 
-Tapped movies go grey and stay in place, only `refresh` button starts re-ranking to change the list. 
+Tapped movies go grey and stay in place, only `refresh` button starts re-ranking to change the list.
 
 **The tap loop is the product.** Search is only how it starts.
 
@@ -22,13 +22,20 @@ Tapped movies go grey and stay in place, only `refresh` button starts re-ranking
 
 ## Architecture
 
-**The rerank runs in the browser.** A catalogue of 5,000 films with precomputed vectors ships as a static file, and every rerank is a local dot product.
+**The rerank runs in the browser.** A catalogue of 4,999 films with precomputed vectors ships as a static file, and every rerank is a local dot product.
 
 The assumption is simple: doing the work locally gives the best experience.
 Nothing to wait for, and no server to go cold while someone is thinking.
 
-The catalogue is capped at 5,000 because the vectors have to reach the browser before they can be used. 5,000 films is 4.5MB once reduced and packed, and it
-downloads while someone is reading the page and typing. One serverless function embeds the search query. Everything after that is local.
+The catalogue is capped at 5,000 because the vectors have to reach the browser
+before they can be used. It is 6.7MB once reduced to 192 dimensions and packed
+as int8, and it downloads in two or three seconds while someone is reading the
+page and typing. A small server embeds the search query. Everything after that
+is local.
+
+The two halves are hosted separately, because they need different things. The
+app is files, so it sits on Vercel. The server holds a 90MB model in memory, so
+it sits on Render.
 
 ```
 TMDB API -> fetch -> raw JSON -> embed -> { texts.json, vec_<field>.npy }
@@ -72,11 +79,11 @@ The method, step by step, is in
 Seventeen test queries, scored by hand against rules written before any results
 were seen.
 
-| Query type | Score |
-| --- | --- |
-| names, like "a Christopher Nolan movie" | 19/20 |
-| mood, like "really scary" | 37/40 |
-| topic, like "vampire" | 44/50 |
+| Query type                                         | Score |
+| -------------------------------------------------- | ----- |
+| names, like "a Christopher Nolan movie"            | 19/20 |
+| mood, like "really scary"                          | 37/40 |
+| topic, like "vampire"                              | 44/50 |
 | two ideas at once, like "fall in love with a city" | 28/50 |
 
 **Embeddings are good at meaning and bad at facts.** Filters are the opposite.
