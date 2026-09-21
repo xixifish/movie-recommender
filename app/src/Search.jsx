@@ -1,9 +1,9 @@
 import { LOGO, ICON_SEARCH } from "./icons.jsx";
 import "./Search.css";
 
-const EXAMPLES = ["Christopher Nolan", "time travel", "really scary", "funny", "vampire"];
+const EXAMPLES = ["alien", "time travel", "really scary", "Christmas", "vampire"];
 
-export default function Search({ text, setText, runSearch }) {
+export default function Search({ text, setText, runSearch, reset }) {
   function onSubmit(e) {
     e.preventDefault();
     runSearch(text);
@@ -17,10 +17,10 @@ export default function Search({ text, setText, runSearch }) {
   return (
     <>
       <header className="top">
-        <div className="logo">
+        <button className="logo" onClick={reset} aria-label="Start again">
           {LOGO}
           <span>POPCORN</span>
-        </div>
+        </button>
       </header>
       <section className="hero">
         <p className="eyebrow">FIND FILMS TO YOUR TASTE</p>

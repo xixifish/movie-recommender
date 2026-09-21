@@ -1,7 +1,7 @@
 // All the ranking maths. No React in here.
 
-export const N = 5000; // films
-const D = 384; // dimensions
+export const N = 4999; // films
+export const D = 192; // must match DIMS in experiments/shrink.py
 const W_LIKED = 0.75;
 const W_DISLIKED = -0.15;
 const W_SAVED = 0.6;
@@ -211,7 +211,6 @@ export function scoreAll(ctx) {
 
   const confs = scoresByField.map((s, f) => confidence(ctx, f, s));
   const weights = capWeights(autoWeights(confs));
-  console.log(weights.map((w) => w.toFixed(3))); // temporary
 
   const scores = combine(ctx, scoresByField, weights);
   for (let i = 0; i < N; i++) scores[i] *= 1 + W_QUALITY * ctx.films[i].q;

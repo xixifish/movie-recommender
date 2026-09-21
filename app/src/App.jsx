@@ -5,7 +5,7 @@ import Card from "./Card.jsx";
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
-import { N, scoreAll } from "./rank.js";
+import { N, scoreAll, D } from "./rank.js";
 
 const N_SHOWN = 48; // 6 film per row on screen
 
@@ -28,6 +28,22 @@ export default function App() {
   const [query, setQuery] = useState(null); // the vector it became
 
   const [defaultList, setDefaultList] = useState([]);
+
+  const skipScroll = useRef(false);
+
+  // Tap logo to reset the page
+  function reset() {
+    skipScroll.current = true;
+    const first = defaultList.slice(0, N_SHOWN);
+    setText("");
+    setQuery(null);
+    setRatings({});
+    setMenuOpen(null);
+    setOverviewOpen(null);
+    setTab("films");
+    setShown(first);
+    setSeen(Object.fromEntries(first.map((i) => [i, true])));
+  }
 
   // Hint bars
   const [dismissed, setDismissed] = useState(() => ({
@@ -82,7 +98,7 @@ export default function App() {
   }
 
   // Refresh
-  function rerank(q = query, s = seen) {
+  function rerank(q = query, alreadyShown = seen) {
     if (!vecs || !masks) return;
 
     const scores = scoreAll({ vecs, masks, ratings, saved, films, query: q });
@@ -90,7 +106,7 @@ export default function App() {
       const next = defaultList.filter((i) => !s[i]).slice(0, N_SHOWN);
       // If the films in next are fewer than N_SHOWN, take the film from the catalogue to fill
       for (let i = 0; i < N && next.length < N_SHOWN; i++) {
-        if (!s[i] && !next.includes(i)) next.push(i);
+        if (!alreadyShown[i] && !next.includes(i)) next.push(i);
       }
       setShown(next);
       setSeen((prev) => ({ ...prev, ...Object.fromEntries(next.map((i) => [i, true])) }));
@@ -99,7 +115,7 @@ export default function App() {
 
     // Task 3: Sort, filter out seen, take 50
     const order = [...Array(N).keys()]
-      .filter((i) => !seen[i])
+      .filter((i) => !alreadyShown[i])
       .sort((a, b) => scores[b] - scores[a])
       .slice(0, N_SHOWN);
 
@@ -124,26 +140,31 @@ export default function App() {
 
   // Load all the vectors of 5,000 films
   useEffect(() => {
-    fetch("/vectors.bin")
-      .then((res) => res.arrayBuffer())
-      .then((buf) => setVecs(new Float32Array(buf)));
-  }, []);
+    async function load() {
+      const [filmsRes, vecRes] = await Promise.all([
+        fetch("/films.json"),
+        fetch("/vectors.bin"),
+      ]);
 
-  // Load all the films with their field content
-  // Set the shown batch of films
-  // Add the shown films to `seen`
-  useEffect(() => {
-    fetch("/films.json")
-      .then((res) => res.json())
-      .then((data) => {
-        const first = data.default.slice(0, N_SHOWN);
-        setFilms(data.films);
-        setMasks(data.fields.map((f) => data.masks[f]));
-        setDefaultList(data.default);
-        setShown(first);
-        setSeen(Object.fromEntries(first.map((i) => [i, true])));
-      })
-      .catch((err) => console.log(err));
+      const data = await filmsRes.json();
+      const first = data.default.slice(0, N_SHOWN);
+      setFilms(data.films);
+      setMasks(data.fields.map((f) => data.masks[f]));
+      setDefaultList(data.default);
+      setShown(first);
+      setSeen(Object.fromEntries(first.map((i) => [i, true])));
+
+      if (data.dims !== D) {
+        console.error(`films.json says ${data.dims} dims, rank.js says ${D}`);
+      }
+
+      // int8 back to floats, once, so the scoring loop stays unchanged
+      const bytes = new Int8Array(await vecRes.arrayBuffer());
+      const vals = new Float32Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) vals[i] = (bytes[i] * data.scale) / 127;
+      setVecs(vals);
+    }
+    load();
   }, []);
 
   // Refresh and jump to the list top
@@ -155,6 +176,10 @@ export default function App() {
       firstRender.current = false;
       return;
     }
+    if (skipScroll.current) {
+      skipScroll.current = false;
+      return;
+    }
     listTop.current?.scrollIntoView({ block: "start" });
   }, [shown]);
 
@@ -163,7 +188,7 @@ export default function App() {
 
   return (
     <>
-      <Search text={text} setText={setText} runSearch={runSearch} />
+      <Search text={text} setText={setText} runSearch={runSearch} reset={reset} />
       <div className="section">
         <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
         <div className="tabs">
@@ -205,7 +230,7 @@ export default function App() {
         <div className="grid" ref={listTop}>
           {list.map((i, n) => (
             <Card
-              key={films[i].id}
+              key={i}
               film={films[i]}
               index={i}
               order={n}
