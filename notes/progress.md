@@ -133,6 +133,18 @@ A rising fraction means the loop is working. A flat one means the taps are doing
 - the ranking is not learning
 - the ranking is fine, but the card does not show enough to judge a film by
 
+**A second limit.** A falling fraction can mean two opposite things:
+
+```
+round 1   saved 2 of 15
+round 2   saved 2 of 14
+round 3   saved 0 of 12
+```
+
+Either the ranking stopped learning, or the user already had four films for tonight
+and was finished. The product is built for the second one, so it is not failure. It's
+necessary to confirm with the user during the user test session.
+
 **How to tell those apart, later.** An A/B test.
 
 **Q4. Is 5,000 films the right size?**
