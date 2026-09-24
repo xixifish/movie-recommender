@@ -9,7 +9,7 @@ Compress the size but loses information, so this needs to run the 17 queries
 before and after and reports how much the top 10 lists agree.
 
 Writes:
-    data/pca.json: the mean and thee 384 x 128 metrix, for export and the server
+    data/pca.json: the mean and the 384 x 128 metrix, for export and the server
     data/vec_<field>_i8.npy: seven quantised field sets
 
 Usage:
@@ -46,6 +46,7 @@ for name in FIELDS:
     full_vectors[name] /= np.linalg.norm(full_vectors[name], axis=1, keepdims=True)
     masks[name] = np.array([bool(r[name]) for r in rows])
 
+# `.argsort().argsort()`: writes ranks for each element to their original position from 0 to len(a) - 1
 pct = lambda a: a.argsort().argsort() / (len(a) - 1)
 quality = (
     pct(np.array([r["vote_count"] for r in rows], float)) + pct(np.array([r["vote_average"] for r in rows], float))

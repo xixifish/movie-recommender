@@ -29,11 +29,11 @@ OUT = Path(__file__).parent.parent / "data" / "movies.jsonl"
 
 
 def get(url, params=None):
-    """GET with a retry on 429."""
-    for attempt in range(3):
+    """GET with a retry on 429 (means too many requests)."""
+    for _ in range(3):
         r = requests.get(url, headers=HEADERS, params=params, timeout=20)
         if r.status_code == 429:
-            # `get()` looks for a header called `Retry-After`
+            # `r.headers.get()` looks for a header called `Retry-After`
             # If it's there, use its value
             # If it's missing, use `5` instead
             wait = int(r.headers.get("Retry-After", 5))
@@ -50,6 +50,7 @@ def get_ids():
     ids = []
     for page in range(1, PAGES + 1):
         data = get(f"{BASE}/discover/movie", {
+            # Find the movies with votes greater or equal to 200
             "vote_count.gte": 200,
             "sort_by": "vote_count.desc",
             "include_adult": "false",
