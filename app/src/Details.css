@@ -4,8 +4,8 @@
   z-index: 100;
 
   background: rgba(17, 10, 6, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 
   display: grid;
   place-items: center;
@@ -16,7 +16,7 @@
 .details {
   position: relative;
   width: min(820px, 100%);
-  background: var(--surface);
+  background: var(--modal-bg);
   border-radius: 20px;
   overflow: hidden;
 }
@@ -50,7 +50,7 @@
   padding: 24px 28px 28px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .details .meta,
@@ -99,6 +99,10 @@
 
 .details .actions button:not(.on):hover {
   background: var(--accent-dark);
+}
+
+.details .actions button.on {
+  background: var(--tapped-dark);
 }
 
 .details .actions button.gone {
