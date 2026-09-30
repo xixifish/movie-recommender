@@ -1,11 +1,4 @@
-import {
-  THUMB_UP,
-  THUMB_DOWN,
-  ICON_CLOSE,
-  ICON_DOTS,
-  ICON_INFO,
-  ICON_SAVE,
-} from "./icons.jsx";
+import { THUMB_UP, THUMB_DOWN, ICON_DOTS, ICON_SAVE, ICON_CLOSE } from "./icons.jsx";
 
 import { runtime } from "./format.js";
 
@@ -20,86 +13,11 @@ export default function Card({
   rating,
   saved,
   menuOpen,
-  detailsOpen,
   onRate,
   onSave,
   onOpenMenu,
   onOpenDetails,
-  onCloseDetails,
 }) {
-  // The button group in the top right corner of a card
-  function corner() {
-    let first;
-    if (detailsOpen)
-      first = (
-        <button
-          className="on"
-          onClick={onCloseDetails}
-          title="Film Overview"
-          aria-label="Film Overview"
-        >
-          {ICON_INFO}
-        </button>
-      );
-    else if (menuOpen)
-      first = (
-        <button
-          className="on"
-          onClick={() => onOpenMenu(null)}
-          title="Close"
-          aria-label="Close"
-        >
-          {ICON_CLOSE}
-        </button>
-      );
-    else if (saved)
-      first = (
-        <button
-          className="on"
-          onClick={() => onSave(index)}
-          title="Save"
-          aria-label="Save"
-        >
-          {ICON_SAVE}
-        </button>
-      );
-    else
-      first = (
-        <button
-          onClick={() => onOpenMenu(index)}
-          title="Overview & Save"
-          aria-label="Overview & Save"
-        >
-          {ICON_DOTS}
-        </button>
-      );
-
-    return (
-      <>
-        {first}
-        <button
-          className={menuOpen ? undefined : "gone"}
-          onClick={() => onOpenDetails(index)}
-          title="Film Overview"
-          aria-label="Film Overview"
-        >
-          {ICON_INFO}
-        </button>
-        <button
-          className={!menuOpen ? "gone" : saved ? "on" : undefined}
-          onClick={() => {
-            onSave(index);
-            onOpenMenu(null);
-          }}
-          title="Save"
-          aria-label="Save"
-        >
-          {ICON_SAVE}
-        </button>
-      </>
-    );
-  }
-
   return (
     <div
       className="card"
@@ -107,8 +25,14 @@ export default function Card({
       data-rating={rating}
       data-saved={saved || undefined}
     >
-      <div className={menuOpen || detailsOpen ? "poster open" : "poster"}>
-        <img src={IMG + film.p} alt={film.t} loading="lazy" decoding="async" />
+      <div className={menuOpen ? "poster open" : "poster"}>
+        <img
+          src={IMG + film.p}
+          alt={film.t}
+          loading="lazy"
+          decoding="async"
+          onClick={() => onOpenDetails(index)}
+        />
         <div className="rating">
           <button
             className={rating === "up" ? "on" : rating === "down" ? "gone" : undefined}
@@ -127,13 +51,34 @@ export default function Card({
             {THUMB_DOWN}
           </button>
         </div>
-        <div className="menu">{corner()}</div>
+        <div className="menu">
+          <button
+            className={saved ? "on" : undefined}
+            onClick={() => onSave(index)}
+            title="Save"
+            aria-label="Save"
+          >
+            {ICON_SAVE}
+          </button>
+        </div>
       </div>
-      <div className="title" title={film.t}>
-        {film.t}
-      </div>
-      <div className="year">
-        {film.y} · {runtime(film.r)}
+      <div className="card-foot">
+        <div className="text">
+          <div className="title" title={film.t}>
+            {film.t}
+          </div>
+          <div className="year">
+            {film.y} · {runtime(film.r)}
+          </div>
+        </div>
+        <button
+          className="more"
+          onClick={() => onOpenMenu(menuOpen ? null : index)}
+          title={menuOpen ? "Close" : "More"}
+          aria-label={menuOpen ? "Close" : "More"}
+        >
+          {menuOpen ? ICON_CLOSE : ICON_DOTS}
+        </button>
       </div>
     </div>
   );
