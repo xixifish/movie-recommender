@@ -80,3 +80,8 @@ export const TMDB_LOGO = (
     />
   </svg>
 );
+export const ICON_PLAY = (
+  <svg viewBox="0 0 24 24">
+    <path d="M9 7.5v9l8-4.5z" />
+  </svg>
+);

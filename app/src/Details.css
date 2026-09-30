@@ -9,41 +9,73 @@
 
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 80px 24px 24px;
   overflow-y: auto;
 }
 
-.details {
+.panel {
   position: relative;
   width: min(820px, 100%);
+}
+
+.panel .close {
+  position: absolute;
+  top: -60px;
+  right: 0;
+  z-index: 1;
+  padding: 6px;
+  border: none;
+  background: none;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.backdrop .close svg {
+  width: 45px;
+  height: 45px;
+  stroke: var(--white);
+  stroke-width: 1;
+}
+
+.details {
+  width: 100%;
   background: var(--modal-bg);
   border-radius: 20px;
   overflow: hidden;
 }
 
-.details .close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  border: none;
-  border-radius: 50px;
-  background: rgba(29, 17, 11, 0.5);
-  z-index: 1;
-  padding: 6px;
-  color: var(--white);
-  cursor: pointer;
-}
-
-.details .close svg {
-  width: 25px;
-  height: 25px;
-  stroke: var(--white);
+.details .stage {
+  position: relative;
 }
 
 .details .media {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  border: 0;
+}
+
+.details .play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #ff0000;
+  color: var(--white);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.details .play svg {
+  width: 54px;
+  height: 54px;
+  fill: currentColor;
 }
 
 .details .info {
