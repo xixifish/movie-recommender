@@ -1,0 +1,68 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  background: rgba(17, 10, 6, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.details {
+  position: relative;
+  width: min(820px, 100%);
+  background: var(--surface);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.details .close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  padding: 6px;
+  background: none;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.details .close {
+  border: none;
+  border-radius: 50px;
+  background: rgba(29, 17, 11, 0.5);
+}
+
+.details .close svg {
+  width: 25px;
+  height: 25px;
+  stroke: var(--white);
+}
+
+.details .media {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.details .info {
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.details .meta,
+.details .label {
+  color: var(--dim);
+}
+
+.details .overview {
+  margin-top: 6px;
+  line-height: 1.4;
+}

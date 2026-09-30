@@ -56,24 +56,32 @@ quality = (
 stacked = np.concatenate([full_vectors[f] for f in FIELDS])
 
 # eigenvectors of the covariance, largest first. Faster than an SVD of 35,000 rows.
-g = (stacked.T @ stacked) / len(stacked)
-vals, vecs = np.linalg.eigh(g)
+g = (stacked.T @ stacked) / len(stacked) # build the summary (384 x 384)
+vals, vecs = np.linalg.eigh(g) # find the directions (eigen values and eigen vectors)
+
+# Rank the eigen values to find the most stretched directions
 order = vals.argsort()[::-1]
-matrix = vecs[:, order[:DIMS]].astype(np.float32) # 384 x 128
+matrix = vecs[:, order[:DIMS]].astype(np.float32) # 384 x 192
+
 kept = vals[order[:DIMS]].sum() / vals.sum()
 print(f"PCA {stacked.shape[1]} -> {DIMS} dims, keeps {kept * 100:.1f}% of the variation")
 
 def shrink(v):
-    """384 floats to 128, the same way for films and for the query."""
+    """384 floats to 192, the same way for films and for the query."""
     out = v @ matrix
+    # `axis=-1`: query vector doesn't have axis=1 because it's vector not matrix
+    # `np.linalg.norm()` calculates the length of the vector
     return out / np.linalg.norm(out, axis=-1, keepdims=True)
 
 small = {f: shrink(full_vectors[f]) for f in FIELDS}
 
 # --- quantise to int8 ---
-
+# Find the biggest number in the small
 scale = float(max(np.abs(small[f]).max() for f in FIELDS))
-q8 = {f: np.round(small[f] * 127 / scale).astype(np.int8) for f in FIELDS}
+# small[f] / scale -> make every number to [-1, 1], then * 127 to make them [-127, 127]
+# Then np.round() to remove the decimal numbers ->  still float32, 4 bytes 
+# .astype(np.int8) transform the numbers to int8 -> 1 byte
+q8 = {f: np.round(small[f] / scale * 127).astype(np.int8) for f in FIELDS}
 back = {f: q8[f].astype(np.float32) * scale / 127 for f in FIELDS}
 print(f"int8 scale {scale:.4f}")
 
@@ -89,14 +97,16 @@ def rank(sets, q):
         valid = s[masks[f]]
         confs.append(np.sort(valid)[::-1][:10].mean() - np.median(valid))
     confs = np.array(confs)
+    # Turn the seven confidences into seven weights that add up to 1
     e = np.exp((confs - confs.max()) / TEMPERATURE)
+    # Calculate the final weights for each field combined with fallback weights
     w = BLEND * (e / e.sum()) + (1 - BLEND) * np.array(W_FALLBACK)
 
     num = np.zeros(n)
     den = np.zeros(n)
     for i, f in enumerate(FIELDS):
-        num += np.where(masks[f], w[i] * sims[f], 0)
-        den += np.where(masks[f], w[i], 0)
+        num += np.where(masks[f], w[i] * sims[f], 0) # this field's contribution
+        den += np.where(masks[f], w[i], 0) # this field's share of the total
     score = (num / np.maximum(den, 1e-9)) * (1 + QUALITY * quality)
     return list(np.argsort(score)[::-1][:TOP_N])
 

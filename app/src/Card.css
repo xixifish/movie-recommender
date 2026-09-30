@@ -101,11 +101,6 @@
   transform: translateY(0);
 }
 
-.poster:has(.overview:not(.gone)) .rating {
-  opacity: 0;
-  visibility: hidden;
-}
-
 /*The chosen thumb slides to the center.
   25px is half the gap plus half a button: (16 + 34) / 2 */
 .rating button:first-child.on {
@@ -145,35 +140,4 @@
 .menu button.on svg.line {
   fill: none;
   stroke: var(--accent);
-}
-
-.overview {
-  position: absolute;
-  inset: 0;
-  padding: 14px 12px;
-  padding-top: 58px;
-  background-color: rgba(29, 17, 11, 0.9);
-  border-radius: inherit;
-  color: var(--ink);
-  font-size: 13px;
-  line-height: 1.5;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px); /*for older safari*/
-  opacity: 1;
-  transition:
-    opacity 220ms,
-    visibility 220ms;
-}
-
-.overview.gone {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.overview p {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 10;
-  line-clamp: 10;
-  overflow: hidden;
 }

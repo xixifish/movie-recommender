@@ -8,6 +8,7 @@ import {
 } from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
+import Details from "./Details.jsx";
 
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
@@ -30,8 +31,8 @@ export default function App() {
 
   const [menuOpen, setMenuOpen] = useState(null); // index of the open card, or null
 
-  const [overviews, setOverviews] = useState(null); // loaded on first open
-  const [overviewOpen, setOverviewOpen] = useState(null); // index or null
+  const [details, setDetails] = useState(null); // lazy fetch: overview, cast, director
+  const [detailsOpen, setDetailsOpen] = useState(null); // index or null
 
   const [text, setText] = useState(""); // what is typed
   const [query, setQuery] = useState(null); // the vector it became
@@ -52,7 +53,7 @@ export default function App() {
     setQuery(null);
     setRatings({});
     setMenuOpen(null);
-    setOverviewOpen(null);
+    setDetailsOpen(null);
     setTab("films");
     setShown(first);
     setSeen(Object.fromEntries(first.map((i) => [i, true])));
@@ -161,14 +162,14 @@ export default function App() {
     setSeen((prev) => ({ ...prev, ...Object.fromEntries(order.map((i) => [i, true])) }));
   }
 
-  // Open one overview
-  function openOverview(i) {
-    if (overviews === null) {
-      fetch("/overviews.json")
+  // cache details.json if it doesn't exist
+  function openDetails(i) {
+    if (details === null) {
+      fetch("/details.json")
         .then((res) => res.json())
-        .then(setOverviews);
+        .then(setDetails);
     }
-    setOverviewOpen(i);
+    setDetailsOpen(i);
     setMenuOpen(null);
   }
 
@@ -299,16 +300,23 @@ export default function App() {
               rating={ratings[i]}
               saved={!!saved[i]}
               menuOpen={menuOpen === i}
-              overviewOpen={overviewOpen === i}
-              overview={overviews ? overviews[i] : ""}
+              detailsOpen={detailsOpen === i}
               onRate={rate}
               onSave={toggleSave}
               onOpenMenu={setMenuOpen}
-              onOpenOverview={openOverview}
-              onCloseOverview={() => setOverviewOpen(null)}
+              onOpenDetails={openDetails}
+              onCloseDetails={() => setDetailsOpen(null)}
             />
           ))}
         </div>
+      )}
+      {detailsOpen !== null && (
+        <Details
+          film={films[detailsOpen]}
+          details={details}
+          index={detailsOpen}
+          onClose={() => setDetailsOpen(null)}
+        />
       )}
       <button
         className="refresh"

@@ -531,6 +531,52 @@ itself is untouched, because that is what the person came for.
 scary" search and the next Refresh moves towards them. What does not happen is
 those marks steering an unrelated search an hour later.
 
+---
+
+## 17. Blank fields do not distort the PCA
+
+The PCA is fitted on every vector from every field, stacked into one table of
+34,993 rows. Some of those rows are not real. A film with no tagline still has
+a row in `vec_tagline.npy`, because the model embedded an empty string and gave
+something back.
+
+| field    | films with no text |
+| -------- | ------------------ |
+| reviews  | 811                |
+| tagline  | 296                |
+| keywords | 20                 |
+| cast     | 4                  |
+| total    | 1,131 (3.2%)       |
+
+Those 1,131 rows are all the **same vector**, repeated. Identical rows pull hard
+in one direction, so the worry was that component 1 was partly describing "this
+field was blank" instead of describing films.
+
+Filtering them out is one line, because the masks already exist:
+
+```python
+stacked = np.concatenate([full_vectors[f][masks[f]] for f in FIELDS])
+```
+
+Measured on the 17 queries, same as finding 15:
+
+| fit on            | variance kept | same films | same order |
+| ----------------- | ------------- | ---------- | ---------- |
+| all 34,993 rows   | 93.1%         | 156/170    | 83/170     |
+| real text only    | 92.9%         | 156/170    | 82/170     |
+
+**No difference.** Two queries swapped one film each, in opposite directions, so
+the total did not move. The matrix does change a little, and the results do not.
+
+Kept the original line. Not because the filtered version is worse, but because
+changing the matrix means rebuilding `pca.json`, the int8 files and
+`vectors.bin`, then deploying Vercel and Render together. Real risk, for nothing
+measurable.
+
+**Worth recording as a negative result**, so the question does not get asked
+again. At 3.2%, blank rows are too small a share to bend a matrix fitted on
+35,000 vectors.
+
 # What the design still needs
 
 **1. The LLM filter layer.** It is not optional. Finding 5 needs two conditions held at once, and nothing else in the design can do that.

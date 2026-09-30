@@ -1,10 +1,12 @@
-import json, numpy as np
+import json
 from pathlib import Path
 
+import numpy as np
+from fields import FIELDS
+
 DATA = Path(__file__).parent.parent / "data"
-OUT =  Path(__file__).parent.parent / "app" / "public"
+OUT = Path(__file__).parent.parent / "app" / "public"
 SERVER = Path(__file__).parent.parent / "server"
-FIELDS = ["overview", "keywords", "reviews", "genres", "tagline", "cast", "director"]
 
 rows = json.loads((DATA / "texts.json").read_text())
 default = json.loads((DATA / "default.json").read_text())
@@ -20,20 +22,47 @@ rating = np.array([r["vote_average"] for r in rows], float)
 pct = lambda a: a.argsort().argsort() / (len(a) - 1)
 quality = (pct(votes) + pct(rating)) / 2
 
-films = [{"id": r["id"], "t": r["title"], "y": r["year"], "p": r["poster"],
-          "q": round(float(quality[i]), 4)} for i, r in enumerate(rows)]
+films = [
+    {
+        "id": r["id"],
+        "t": r["title"],
+        "y": r["year"],
+        "p": r["poster"],
+        "r": r["runtime"],
+        "b": r["backdrop"],
+        "tr": r["trailer"],
+        "c": r["cert"],
+        "q": round(float(quality[i]), 4),
+    }
+    for i, r in enumerate(rows)
+]
 
 masks = {f: "".join("1" if r[f] else "0" for r in rows) for f in FIELDS}
 
 OUT.mkdir(parents=True, exist_ok=True)
-(OUT / "films.json").write_text(json.dumps(
-    {"fields": FIELDS, "films": films, "masks": masks, "default": default, "dims": pca["dims"], "scale": pca["scale"]}
-))
-(OUT / "overviews.json").write_text(json.dumps(
-    [r["overview"] for r in rows]
-))
+(OUT / "films.json").write_text(
+    json.dumps(
+        {
+            "fields": FIELDS,
+            "films": films,
+            "masks": masks,
+            "default": default,
+            "dims": pca["dims"],
+            "scale": pca["scale"],
+        }
+    )
+)
+(OUT / "details.json").write_text(
+    json.dumps(
+        {
+            "overview": [r["overview"] for r in rows],
+            "cast": [r["cast"] for r in rows],
+            "director": [r["director"] for r in rows],
+        }
+    )
+)
 
 blocks = [np.load(DATA / f"vec_{f}_i8.npy") for f in FIELDS]
 np.concatenate(blocks).tofile(OUT / "vectors.bin")
 
-print(f"{len(films)} films, {(OUT/'vectors.bin').stat().st_size/1e6:.0f}MB")
+print(f"{len(films)} films, {(OUT / 'vectors.bin').stat().st_size / 1e6:.0f}MB")

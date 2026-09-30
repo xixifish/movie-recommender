@@ -26,7 +26,7 @@ PAGES = 250      # 20 movies per page, so 250 pages -> 5,000 movies
 DELAY = 0.15     # 6 or 7 requests per second, well under the 40/sec limit
 
 OUT = Path(__file__).parent.parent / "data" / "movies.jsonl"
-
+OUT_PRE = Path(__file__).parent.parent / "data" / "movies_pre.jsonl"
 
 def get(url, params=None):
     """GET with a retry on 429 (means too many requests)."""
@@ -48,6 +48,7 @@ def get(url, params=None):
 def get_ids():
     """The 5,000 most voted film ids, in order."""
     ids = []
+    # 250 calls
     for page in range(1, PAGES + 1):
         data = get(f"{BASE}/discover/movie", {
             # Find the movies with votes greater or equal to 200
@@ -65,6 +66,17 @@ def get_ids():
         time.sleep(DELAY)
     return ids
 
+def previous_ids():
+    """Similar as `already_have()`, but returns a list to keep the order."""
+    if not OUT_PRE.exists():
+        return []
+    ids = []
+    with open(OUT_PRE) as f:
+        for line in f:
+            if line.strip():
+                ids.append(json.loads(line)["id"])
+    print(f"{len(ids)} ids waiting for re-fetched new fields.")
+    return ids
 
 def already_have():
     """Ids already in the file, so a re-run picks up where it stopped."""
@@ -82,17 +94,21 @@ def already_have():
 def fetch_details(ids, done):
     """Fetch each film and append it as its own line.
 
-    `append_to_response` bundles keywords, credits and reviews into one request.
+    `append_to_response` bundles keywords, credits, reviews, videos, release_dates into one request.
     No spaces. A space breaks it silently and drops the fields after it.
+
+    `videos` includes trailer;
+    `release_dates` includes age rating in each country.
     """
     todo = [i for i in ids if i not in done]
     print(f"{len(todo)} films to fetch\n")
 
     # Append mode. One line per film, so nothing already written is rewritten.
+    # 5000 calls
     with open(OUT, "a") as f:
         for i, movie_id in enumerate(todo, 1):
             detail = get(f"{BASE}/movie/{movie_id}", {
-                "append_to_response": "keywords,credits,reviews",
+                "append_to_response": "keywords,credits,reviews,videos,release_dates",
                 "language": "en-US",
             })
             f.write(json.dumps(detail) + "\n")
@@ -108,7 +124,8 @@ if __name__ == "__main__":
     OUT.parent.mkdir(exist_ok=True)
 
     done = already_have()
-    ids = get_ids()
+    # ids = get_ids() # for accessing the most updated list from TMDB
+    ids = previous_ids() # the ids must match the vectors already built
     fetch_details(ids, done)
 
     total = sum(1 for line in open(OUT) if line.strip())

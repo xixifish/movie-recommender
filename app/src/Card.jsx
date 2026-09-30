@@ -7,6 +7,8 @@ import {
   ICON_SAVE,
 } from "./icons.jsx";
 
+import { runtime } from "./format.js";
+
 import "./Card.css";
 
 const IMG = "https://image.tmdb.org/t/p/w342";
@@ -18,22 +20,21 @@ export default function Card({
   rating,
   saved,
   menuOpen,
-  overviewOpen,
-  overview,
+  detailsOpen,
   onRate,
   onSave,
   onOpenMenu,
-  onOpenOverview,
-  onCloseOverview,
+  onOpenDetails,
+  onCloseDetails,
 }) {
   // The button group in the top right corner of a card
   function corner() {
     let first;
-    if (overviewOpen)
+    if (detailsOpen)
       first = (
         <button
           className="on"
-          onClick={onCloseOverview}
+          onClick={onCloseDetails}
           title="Film Overview"
           aria-label="Film Overview"
         >
@@ -78,7 +79,7 @@ export default function Card({
         {first}
         <button
           className={menuOpen ? undefined : "gone"}
-          onClick={() => onOpenOverview(index)}
+          onClick={() => onOpenDetails(index)}
           title="Film Overview"
           aria-label="Film Overview"
         >
@@ -106,7 +107,7 @@ export default function Card({
       data-rating={rating}
       data-saved={saved || undefined}
     >
-      <div className={menuOpen || overviewOpen ? "poster open" : "poster"}>
+      <div className={menuOpen || detailsOpen ? "poster open" : "poster"}>
         <img src={IMG + film.p} alt={film.t} loading="lazy" decoding="async" />
         <div className="rating">
           <button
@@ -127,14 +128,13 @@ export default function Card({
           </button>
         </div>
         <div className="menu">{corner()}</div>
-        <div className={overviewOpen ? "overview" : "overview gone"}>
-          <p>{overview}</p>
-        </div>
       </div>
       <div className="title" title={film.t}>
         {film.t}
       </div>
-      <div className="year">{film.y}</div>
+      <div className="year">
+        {film.y} · {runtime(film.r)}
+      </div>
     </div>
   );
 }

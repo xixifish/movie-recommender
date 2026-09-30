@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+from fields import FIELDS as FIELD_NAMES
 from sentence_transformers import SentenceTransformer
 
 DATA = Path(__file__).parent.parent / "data"
@@ -22,12 +23,16 @@ TEXTS = DATA / "texts.json"
 
 MODEL = "all-MiniLM-L6-v2"
 
-CAST_N = 6           # how many actors
-KEYWORD_N = 10       # how many keywords
-REVIEW_N = 3         # how many reviews
-REVIEW_CHARS = 300   # characters kept from each review
+CERT_COUNTRIES = ["AU", "US"]  # AU first, US as a fallback
+CERT_FIX = {"MA15+": "MA 15+", "R18+": "R 18+"}  # same rating, two spellings
+
+CAST_N = 6  # how many actors
+KEYWORD_N = 10  # how many keywords
+REVIEW_N = 3  # how many reviews
+REVIEW_CHARS = 300  # characters kept from each review
 
 # --- one getter per field ---
+
 
 def overview(m):
     return m.get("overview") or ""
@@ -54,12 +59,42 @@ def cast(m):
 def director(m):
     crew = (m.get("credits") or {}).get("crew", [])
     names = [c["name"] for c in crew if c.get("job") == "Director"]
-    return ", ".join(dict.fromkeys(names))   # dedupe, keep order
+    return ", ".join(dict.fromkeys(names))  # dedupe, keep order
 
 
 def reviews(m):
     found = (m.get("reviews") or {}).get("results", [])
     return " ".join(r["content"][:REVIEW_CHARS] for r in found[:REVIEW_N])
+
+
+def trailer(m):
+    """One YouTube key, or "". Prefers an official English trailer."""
+    found = (m.get("videos") or {}).get("results", [])
+    pool = [
+        v for v in found if v.get("site") == "YouTube" and v.get("type") == "Trailer"
+    ]
+
+    english = [v for v in pool if v.get("iso_639_1") == "en"] or pool
+    official = [v for v in english if v.get("official")] or english
+    return official[0]["key"] if official else ""
+
+
+def cert(m):
+    """The age rating, or "". Prefers the theatrical (cinema) release. AU before US."""
+    for code in CERT_COUNTRIES:
+        for country in (m.get("release_dates", {})).get("results", []):
+            if country["iso_3166_1"] != code:
+                continue
+            rated = [
+                r
+                for r in country["release_dates"]
+                if r.get("certification") and r.get("certification") != "NR"
+            ]
+            best = [r for r in rated if r["type"] == 3] or rated  # type 3 is theatrical
+            if best:
+                value = best[0]["certification"]
+                return CERT_FIX.get(value, value)
+    return ""
 
 
 FIELDS = {
@@ -72,7 +107,10 @@ FIELDS = {
     "reviews": reviews,
 }
 
+assert list(FIELDS) == FIELD_NAMES, "embed.py and fields.py disagree"
+
 # --- job 1: build the texts file ---
+
 
 def load_raw():
     """One film per line."""
@@ -93,6 +131,10 @@ def build_texts():
             "poster": m.get("poster_path") or "",
             "vote_count": m.get("vote_count") or 0,
             "vote_average": m.get("vote_average") or 0.0,
+            "runtime": m.get("runtime") or "",
+            "backdrop": m.get("backdrop_path") or "",
+            "trailer": trailer(m),
+            "cert": cert(m),
         }
         for name, getter in FIELDS.items():
             row[name] = getter(m)
@@ -103,10 +145,12 @@ def build_texts():
     print(f"wrote {TEXTS.name}: {len(rows)} films, {size:.1f}MB\n")
     return rows
 
+
 # --- job 2: embed each field ---
 
+
 def embed(rows):
-    model = None   # load it only if something actually needs embedding
+    model = None  # load it only if something actually needs embedding
 
     for name in FIELDS:
         out = DATA / f"vec_{name}.npy"
