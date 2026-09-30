@@ -211,6 +211,11 @@ export default function App() {
       const vals = new Float32Array(bytes.length);
       for (let i = 0; i < bytes.length; i++) vals[i] = (bytes[i] * data.scale) / 127;
       setVecs(vals);
+
+      // warm the cache so the first open modal has no empty state
+      fetch("/details.json")
+        .then((res) => res.json())
+        .then(setDetails);
     }
     load();
   }, []);
@@ -315,6 +320,10 @@ export default function App() {
           film={films[detailsOpen]}
           details={details}
           index={detailsOpen}
+          rating={ratings[detailsOpen]} // rating has three values: "up", "down", or undefined
+          saved={!!saved[detailsOpen]} // saved has two values: true or undefined
+          onRate={rate}
+          onSave={toggleSave}
           onClose={() => setDetailsOpen(null)}
         />
       )}
