@@ -31,7 +31,7 @@ export default function App() {
 
   const [menuOpen, setMenuOpen] = useState(null); // index of the open card, or null
 
-  const [details, setDetails] = useState(null); // lazy fetch: overview, cast, director
+  const [details, setDetails] = useState(null); // overview, cast, director
   const [detailsOpen, setDetailsOpen] = useState(null); // index or null
 
   const [text, setText] = useState(""); // what is typed
@@ -317,6 +317,7 @@ export default function App() {
       )}
       {detailsOpen !== null && (
         <Details
+          key={detailsOpen}
           film={films[detailsOpen]}
           details={details}
           index={detailsOpen}
