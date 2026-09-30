@@ -305,12 +305,10 @@ export default function App() {
               rating={ratings[i]}
               saved={!!saved[i]}
               menuOpen={menuOpen === i}
-              detailsOpen={detailsOpen === i}
               onRate={rate}
               onSave={toggleSave}
               onOpenMenu={setMenuOpen}
               onOpenDetails={openDetails}
-              onCloseDetails={() => setDetailsOpen(null)}
             />
           ))}
         </div>

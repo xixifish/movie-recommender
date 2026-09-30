@@ -9,6 +9,7 @@
   aspect-ratio: 2/3;
   object-fit: cover;
   display: block;
+  cursor: pointer;
   transition:
     filter 220ms,
     transform 220ms;
@@ -27,7 +28,6 @@
 }
 
 .title {
-  margin-top: 9px;
   font-size: 13px;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -35,10 +35,39 @@
   line-clamp: 2;
   overflow: hidden;
 }
+
 .year {
   margin-top: 4px;
   font-size: 13px;
   color: var(--dim);
+}
+
+.card-foot {
+  display: flex;
+  margin-top: 8px;
+  gap: 8px;
+  align-items: start;
+}
+
+.card-foot .text {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-foot .more {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.card-foot .more svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--dim);
 }
 
 .rating {
@@ -94,8 +123,15 @@
   visibility: hidden;
 }
 
+/*touch devices do not get stuck in a hover state after a tap*/
+@media (hover: hover) {
+  .poster:hover button:not(.gone) {
+    opacity: 1;
+  }
+}
+
 .poster:hover button:not(.gone),
-.poster.open .menu button:not(.gone),
+.poster.open button:not(.gone),
 .poster button.on {
   opacity: 1;
   transform: translateY(0);
