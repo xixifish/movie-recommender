@@ -25,17 +25,13 @@
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 1;
-  padding: 6px;
-  background: none;
-  color: var(--white);
-  cursor: pointer;
-}
-
-.details .close {
   border: none;
   border-radius: 50px;
   background: rgba(29, 17, 11, 0.5);
+  z-index: 1;
+  padding: 6px;
+  color: var(--white);
+  cursor: pointer;
 }
 
 .details .close svg {
@@ -60,6 +56,74 @@
 .details .meta,
 .details .label {
   color: var(--dim);
+}
+
+.details .actions {
+  display: flex;
+  gap: 28px;
+  margin: 8px 0 4px;
+}
+
+.details .actions .group + .group {
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+}
+
+.details .actions .label {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.details .actions .row {
+  display: flex;
+  gap: 14px;
+}
+
+.details .actions button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--white);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out,
+    visibility 150ms,
+    background 120ms;
+}
+
+.details .actions button:not(.on):hover {
+  background: var(--accent-dark);
+}
+
+.details .actions button.gone {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.details .actions button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+/*The dislike thumb slides to the left.
+  62px is one button plus the gap: 48 + 14 */
+.details .actions .row button:last-child.on {
+  transform: translateX(-62px);
+}
+
+.details .actions button.on svg {
+  fill: var(--accent);
+  stroke: none;
 }
 
 .details .overview {

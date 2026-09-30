@@ -1,11 +1,20 @@
 import { useEffect } from "react";
-import { ICON_CLOSE } from "./icons";
+import { ICON_CLOSE, ICON_SAVE, THUMB_DOWN, THUMB_UP } from "./icons";
 import { runtime } from "./format";
 import "./Details.css";
 
 const IMG = "https://image.tmdb.org/t/p/w780";
 
-export default function Details({ film, details, index, onClose }) {
+export default function Details({
+  film,
+  details,
+  index,
+  rating,
+  saved,
+  onRate,
+  onSave,
+  onClose,
+}) {
   const overview = details?.overview[index] ?? "";
   const director = details?.director[index] ?? "";
   const cast = details?.cast[index] ?? "";
@@ -43,6 +52,44 @@ export default function Details({ film, details, index, onClose }) {
             <span className="label">Cast: </span>
             {cast}
           </p>
+          <div className="actions">
+            <div className="group">
+              <p className="label">Save it for later</p>
+              <button
+                className={saved ? "on" : undefined}
+                onClick={() => onSave(index)}
+                title="Save"
+                aria-label="Save"
+              >
+                {ICON_SAVE}
+              </button>
+            </div>
+            <div className="group">
+              <p className="label">Watched? How do you feel?</p>
+              <div className="row">
+                <button
+                  className={
+                    rating === "up" ? "on" : rating === "down" ? "gone" : undefined
+                  }
+                  onClick={() => onRate(index, "up")}
+                  title="Like"
+                  aria-label="Like"
+                >
+                  {THUMB_UP}
+                </button>
+                <button
+                  className={
+                    rating === "down" ? "on" : rating === "up" ? "gone" : undefined
+                  }
+                  onClick={() => onRate(index, "down")}
+                  title="Dislike"
+                  aria-label="Dislike"
+                >
+                  {THUMB_DOWN}
+                </button>
+              </div>
+            </div>
+          </div>
           <p className="overview">
             <span className="label">Overview: </span>
             {overview}
