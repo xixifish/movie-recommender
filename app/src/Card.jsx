@@ -17,6 +17,8 @@ export default function Card({
   onSave,
   onOpenMenu,
   onOpenDetails,
+  hasRated,
+  hasSaved,
 }) {
   return (
     <div
@@ -34,24 +36,28 @@ export default function Card({
           onClick={() => onOpenDetails(index)}
         />
         <div className="rating">
-          <button
-            className={rating === "up" ? "on" : rating === "down" ? "gone" : undefined}
-            onClick={() => onRate(index, "up")}
-            title="Like"
-            aria-label="Like"
-          >
-            {THUMB_UP}
-          </button>
-          <button
-            className={rating === "down" ? "on" : rating === "up" ? "gone" : undefined}
-            onClick={() => onRate(index, "down")}
-            title="Dislike"
-            aria-label="Dislike"
-          >
-            {THUMB_DOWN}
-          </button>
+          {!hasRated && <span className="prompt">Watched? How do you feel?</span>}
+          <div className="row">
+            <button
+              className={rating === "up" ? "on" : rating === "down" ? "gone" : undefined}
+              onClick={() => onRate(index, "up")}
+              title="Like"
+              aria-label="Like"
+            >
+              {THUMB_UP}
+            </button>
+            <button
+              className={rating === "down" ? "on" : rating === "up" ? "gone" : undefined}
+              onClick={() => onRate(index, "down")}
+              title="Dislike"
+              aria-label="Dislike"
+            >
+              {THUMB_DOWN}
+            </button>
+          </div>
         </div>
         <div className="menu">
+          {!hasSaved && <span className="prompt">Saved it for later</span>}
           <button
             className={saved ? "on" : undefined}
             onClick={() => onSave(index)}
