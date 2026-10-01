@@ -37,8 +37,6 @@ export default function App() {
   const [text, setText] = useState(""); // what is typed
   const [query, setQuery] = useState(null); // the vector it became
 
-  const [defaultList, setDefaultList] = useState([]);
-
   const skipScroll = useRef(false);
 
   const [searching, setSearching] = useState(false);
@@ -48,15 +46,15 @@ export default function App() {
   // Tap logo to reset the page
   function reset() {
     skipScroll.current = true;
-    const first = defaultList.slice(0, N_SHOWN);
     setText("");
     setQuery(null);
     setRatings({});
     setMenuOpen(null);
     setDetailsOpen(null);
     setTab("films");
-    setShown(first);
-    setSeen(Object.fromEntries(first.map((i) => [i, true])));
+    setShown([]);
+    setSeen({});
+    setRoundSaves({});
   }
 
   // Hint bars
@@ -156,18 +154,7 @@ export default function App() {
       films,
       query: q,
     });
-    if (scores === null) {
-      const next = defaultList
-        .filter((i) => !alreadyShown[i] && !marked(i))
-        .slice(0, N_SHOWN);
-      // If the films in next are fewer than N_SHOWN, take the film from the catalogue to fill
-      for (let i = 0; i < N && next.length < N_SHOWN; i++) {
-        if (!alreadyShown[i] && !marked(i) && !next.includes(i)) next.push(i);
-      }
-      setShown(next);
-      setSeen((prev) => ({ ...prev, ...Object.fromEntries(next.map((i) => [i, true])) }));
-      return;
-    }
+    if (scores === null) return;
 
     // Task 3: Sort, filter out seen, take 50
     const order = [...Array(N).keys()]
@@ -203,7 +190,6 @@ export default function App() {
       ]);
 
       const data = await filmsRes.json();
-      const first = data.default.slice(0, N_SHOWN);
       setFilms(data.films);
       setMasks(data.fields.map((f) => data.masks[f]));
 
@@ -215,10 +201,6 @@ export default function App() {
           ids.map((id) => [byId.get(id), true]).filter(([i]) => i !== undefined),
         ),
       );
-
-      setDefaultList(data.default);
-      setShown(first);
-      setSeen(Object.fromEntries(first.map((i) => [i, true])));
 
       if (data.dims !== D) {
         console.error(`films.json says ${data.dims} dims, rank.js says ${D}`);

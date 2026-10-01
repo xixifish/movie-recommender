@@ -41,6 +41,14 @@
   letter-spacing: -0.02em;
 }
 
+.hero .lighter {
+  color: rgb(239 219 209 / 0.5);
+}
+
+.hero .light {
+  color: rgb(239 219 209 / 0.8);
+}
+
 .top,
 .hero {
   max-width: var(--page);
@@ -83,7 +91,7 @@
   background: none;
   border: none;
   outline: none;
-  padding: 13px 0;
+  padding: 12px 0;
   color: var(--ink);
   font-size: 16px;
 }
@@ -98,8 +106,8 @@
   color: var(--white);
   border: none;
   border-radius: 3px;
-  margin: 4px;
-  padding: 10px 22px;
+  margin: 3px;
+  padding: 8px 22px;
   font-weight: 600;
   cursor: pointer;
   transition: background 120ms;
@@ -124,6 +132,7 @@
   border-radius: 999px;
   padding: 6px 16px;
   color: var(--dim);
+  cursor: pointer;
 }
 
 .chips button:hover {
