@@ -65,6 +65,14 @@ export default function App() {
     saved: localStorage.getItem("hint.saved") === "1",
   }));
 
+  // Saved and rated hints
+  const [hasSaved, setHasSaved] = useState(
+    () => localStorage.getItem("hasSaved") === "1",
+  );
+  const [hasRated, setHasRated] = useState(
+    () => localStorage.getItem("hasRated") === "1",
+  );
+
   function dismiss(which) {
     setDismissed((d) => ({ ...d, [which]: true }));
     localStorage.setItem(`hint.${which}`, "1");
@@ -110,14 +118,24 @@ export default function App() {
   }
 
   // Up or down a film
+  // Mark rated hint to disappear
   function rate(i, kind) {
     setRatings((r) => ({ ...r, [i]: r[i] === kind ? undefined : kind }));
+    if (!hasRated) {
+      setHasRated(true);
+      localStorage.setItem("hasRated", "1");
+    }
   }
 
   // Save a film
+  // Mark saved hint to disappear
   function toggleSave(i) {
     setSaved((s) => ({ ...s, [i]: s[i] ? undefined : true }));
     setRoundSaves((s) => ({ ...s, [i]: s[i] ? undefined : true }));
+    if (!hasSaved) {
+      setHasSaved(true);
+      localStorage.setItem("hasSaved", "1");
+    }
   }
 
   // Refresh
@@ -309,6 +327,8 @@ export default function App() {
               onSave={toggleSave}
               onOpenMenu={setMenuOpen}
               onOpenDetails={openDetails}
+              hasRated={hasRated}
+              hasSaved={hasSaved}
             />
           ))}
         </div>

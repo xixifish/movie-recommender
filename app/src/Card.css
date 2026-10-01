@@ -2,6 +2,43 @@
   animation: rise 320ms ease-out backwards;
 }
 
+.poster {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: inset(0 round 4px);
+}
+
+.poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line);
+  border-radius: inherit;
+  pointer-events: none;
+  transition:
+    border-color 120ms,
+    background 120ms;
+}
+
+.poster:hover::before,
+.poster.open::before {
+  border-color: var(--line-strong);
+  background: rgba(29, 17, 11, 0.25);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .card img {
   width: 100%;
   position: relative;
@@ -19,7 +56,7 @@
 .card[data-rating] img,
 .card[data-saved] img {
   filter: blur(1px);
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .card[data-rating] .poster::before,
@@ -73,9 +110,39 @@
 .rating {
   position: absolute;
   bottom: 10px;
-  left: 50%; /* moves the left edge to the middle*/
-  transform: translate(-50%); /*pulls the button back by half its own width*/
+  left: 0;
+  right: 0;
+  align-items: center;
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rating .prompt,
+.menu .prompt {
+  font-size: 13px;
+  color: var(--white);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--surface);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+
+.rating .prompt {
+  transform: translateY(6px); /* rises with the thumbs */
+}
+
+.menu .prompt {
+  transform: translateY(-6px); /* rises with the thumbs */
+}
+
+.rating .row {
+  display: flex;
+  flex-direction: row;
   gap: 16px;
 }
 
@@ -84,8 +151,9 @@
   top: 10px;
   right: 10px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
   z-index: 1;
 }
 
@@ -125,13 +193,15 @@
 
 /*touch devices do not get stuck in a hover state after a tap*/
 @media (hover: hover) {
-  .poster:hover button:not(.gone) {
+  .poster:hover button:not(.gone),
+  .poster:hover .prompt {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.poster:hover button:not(.gone),
 .poster.open button:not(.gone),
+.poster.open .prompt,
 .poster button.on {
   opacity: 1;
   transform: translateY(0);
