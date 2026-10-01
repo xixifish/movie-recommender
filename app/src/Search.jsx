@@ -1,7 +1,15 @@
 import { LOGO, ICON_SEARCH } from "./icons.jsx";
 import "./Search.css";
 
-const EXAMPLES = ["alien", "time travel", "really scary", "Christmas", "vampire"];
+const EXAMPLES = [
+  "makes me cry",
+  "time travel",
+  "a road trip",
+  "something funny",
+  "vampire",
+  "witches and wizards",
+  "Tom Hanks",
+];
 
 export default function Search({ text, setText, runSearch, reset, searching }) {
   function onSubmit(e) {
@@ -23,11 +31,12 @@ export default function Search({ text, setText, runSearch, reset, searching }) {
         </button>
       </header>
       <section className="hero">
-        <p className="eyebrow">FIND FILMS TO YOUR TASTE</p>
+        <p className="eyebrow">FIND FILMS TO YOUR TASTE · NO SIGN IN</p>
         <h1>
-          Start with a thought.
+          <span className="lighter">Start with an idea.</span>
           <br />
-          Mark a few. Get closer.
+          <span className="light">Mark a few. </span>
+          <span className="white">Get closer.</span>
         </h1>
       </section>
       <form className="search" onSubmit={onSubmit}>
