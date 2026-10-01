@@ -1,11 +1,4 @@
-import {
-  THUMB_UP,
-  THUMB_DOWN,
-  ICON_SAVE,
-  ICON_REFRESH,
-  ICON_SEND,
-  TMDB_LOGO,
-} from "./icons.jsx";
+import { ICON_REFRESH, ICON_SEND, TMDB_LOGO } from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 import Details from "./Details.jsx";
@@ -57,24 +50,13 @@ export default function App() {
     setRoundSaves({});
   }
 
-  // Hint bars
-  const [dismissed, setDismissed] = useState(() => ({
-    films: localStorage.getItem("hint.films") === "1",
-    saved: localStorage.getItem("hint.saved") === "1",
-  }));
-
-  // Saved and rated hints
+  // Saved and rated prompts
   const [hasSaved, setHasSaved] = useState(
     () => localStorage.getItem("hasSaved") === "1",
   );
   const [hasRated, setHasRated] = useState(
     () => localStorage.getItem("hasRated") === "1",
   );
-
-  function dismiss(which) {
-    setDismissed((d) => ({ ...d, [which]: true }));
-    localStorage.setItem(`hint.${which}`, "1");
-  }
 
   const [tab, setTab] = useState("films");
   const [savedList, setSavedList] = useState([]);
@@ -116,7 +98,7 @@ export default function App() {
   }
 
   // Up or down a film
-  // Mark rated hint to disappear
+  // Mark rated prompt to disappear
   function rate(i, kind) {
     setRatings((r) => ({ ...r, [i]: r[i] === kind ? undefined : kind }));
     if (!hasRated) {
@@ -126,7 +108,7 @@ export default function App() {
   }
 
   // Save a film
-  // Mark saved hint to disappear
+  // Mark saved prompt to disappear
   function toggleSave(i) {
     setSaved((s) => ({ ...s, [i]: s[i] ? undefined : true }));
     setRoundSaves((s) => ({ ...s, [i]: s[i] ? undefined : true }));
@@ -271,23 +253,6 @@ export default function App() {
           </button>
         </div>
       </div>
-      {!dismissed[tab] && (
-        <div className="hint">
-          {tab === "films" ? (
-            <>
-              <span>{THUMB_UP} Liked</span>
-              <span>{THUMB_DOWN} Disliked</span>
-              <span>{ICON_SAVE} Save</span>
-              <p>The more you mark, the closer the next films get.</p>
-            </>
-          ) : (
-            <p className="plain">
-              No sign in needed. Send your saved list to your email.
-            </p>
-          )}
-          <button onClick={() => dismiss(tab)}>Got it</button>
-        </div>
-      )}
       {list.length === 0 ? (
         <p className="empty">
           {tab === "saved"
