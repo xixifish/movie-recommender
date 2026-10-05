@@ -2,8 +2,6 @@
 
 User starts to use the recommender from entering an idea, then get a list of movies. Tap a few of them (liked/disliked, interested), and refresh the list moving closer to the user's taste. No need to sign in.
 
-**Status:** early. Experimenting on the data currently, to see how to improve the recommendations. No app built yet.
-
 ---
 
 ## The idea
