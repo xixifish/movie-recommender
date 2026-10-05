@@ -238,6 +238,7 @@ export default function App() {
         runSearch={runSearch}
         reset={reset}
         searching={searching}
+        compact={query !== null} // A resresent value for sticky search bar
       />
       <div className="section">
         <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
