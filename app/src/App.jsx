@@ -1,4 +1,4 @@
-import { ICON_REFRESH, ICON_SEND, TMDB_LOGO } from "./icons.jsx";
+import { ICON_PICKS, ICON_REFRESH, ICON_SAVE, ICON_SEND } from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 import Details from "./Details.jsx";
@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 import { N, scoreAll, D } from "./rank.js";
+import Footer from "./Footer.jsx";
 
 const N_SHOWN = 48; // 6 film per row on screen
 
@@ -44,7 +45,7 @@ export default function App() {
     setRatings({});
     setMenuOpen(null);
     setDetailsOpen(null);
-    setTab("films");
+    setTab("picks");
     setShown([]);
     setSeen({});
     setRoundSaves({});
@@ -58,7 +59,10 @@ export default function App() {
     () => localStorage.getItem("hasRated") === "1",
   );
 
-  const [tab, setTab] = useState("films");
+  // Display the tabs or not
+  const searched = query !== null;
+
+  const [tab, setTab] = useState("picks");
   const [savedList, setSavedList] = useState([]);
 
   const list = tab === "saved" ? savedList : shown;
@@ -225,7 +229,7 @@ export default function App() {
       return;
     }
     listTop.current?.scrollIntoView({ block: "start" });
-  }, [shown]);
+  }, [shown, tab]);
 
   // If the data is not there, render something else and stop
   if (!films.length || !vecs) return <p>Loading...</p>;
@@ -240,76 +244,73 @@ export default function App() {
         searching={searching}
         compact={query !== null} // A resresent value for sticky search bar
       />
-      <div className="section">
-        <h2>{tab === "films" ? "Recommendations" : "Saved"}</h2>
-        <div className="tabs">
-          <button
-            className={tab === "films" ? "on" : undefined}
-            onClick={() => setTab("films")}
-          >
-            Films
-          </button>
-          <button className={tab === "saved" ? "on" : undefined} onClick={openSaved}>
-            Saved
-          </button>
-        </div>
-      </div>
-      {list.length === 0 ? (
-        <p className="empty">
-          {tab === "saved"
-            ? "Nothing saved yet. Use the bookmark button on a film you want to keep."
-            : "You have been through everything."}
-        </p>
-      ) : (
-        <div className={searching ? "grid dim" : "grid"} ref={listTop}>
-          {list.map((i, n) => (
-            <Card
-              key={i}
-              film={films[i]}
-              index={i}
-              order={n}
-              rating={ratings[i]}
-              saved={!!saved[i]}
-              menuOpen={menuOpen === i}
+      {searched && (
+        <>
+          <div className="section" ref={listTop}>
+            <div className="tabs">
+              <button
+                className={tab === "picks" ? "on" : undefined}
+                onClick={() => setTab("picks")}
+              >
+                {ICON_PICKS}
+                Picks
+              </button>
+              <button className={tab === "saved" ? "on" : undefined} onClick={openSaved}>
+                {ICON_SAVE}
+                Saved
+              </button>
+            </div>
+          </div>
+          {list.length === 0 ? (
+            <p className="empty">
+              {tab === "saved"
+                ? "Nothing saved yet. Use the bookmark button on a film you want to keep."
+                : "You have been through everything."}
+            </p>
+          ) : (
+            <div className={searching ? "grid dim" : "grid"}>
+              {list.map((i, n) => (
+                <Card
+                  key={i}
+                  film={films[i]}
+                  index={i}
+                  order={n}
+                  rating={ratings[i]}
+                  saved={!!saved[i]}
+                  menuOpen={menuOpen === i}
+                  onRate={rate}
+                  onSave={toggleSave}
+                  onOpenMenu={setMenuOpen}
+                  onOpenDetails={openDetails}
+                  hasRated={hasRated}
+                  hasSaved={hasSaved}
+                />
+              ))}
+            </div>
+          )}
+          {detailsOpen !== null && (
+            <Details
+              key={detailsOpen}
+              film={films[detailsOpen]}
+              details={details}
+              index={detailsOpen}
+              rating={ratings[detailsOpen]} // rating has three values: "up", "down", or undefined
+              saved={!!saved[detailsOpen]} // saved has two values: true or undefined
               onRate={rate}
               onSave={toggleSave}
-              onOpenMenu={setMenuOpen}
-              onOpenDetails={openDetails}
-              hasRated={hasRated}
-              hasSaved={hasSaved}
+              onClose={() => setDetailsOpen(null)}
             />
-          ))}
-        </div>
+          )}
+          <button
+            className="refresh"
+            onClick={tab === "picks" ? () => rerank() : sendEmail}
+            aria-label={tab === "picks" ? "Refresh" : "Send to email"}
+          >
+            {tab === "picks" ? ICON_REFRESH : ICON_SEND}
+          </button>
+        </>
       )}
-      {detailsOpen !== null && (
-        <Details
-          key={detailsOpen}
-          film={films[detailsOpen]}
-          details={details}
-          index={detailsOpen}
-          rating={ratings[detailsOpen]} // rating has three values: "up", "down", or undefined
-          saved={!!saved[detailsOpen]} // saved has two values: true or undefined
-          onRate={rate}
-          onSave={toggleSave}
-          onClose={() => setDetailsOpen(null)}
-        />
-      )}
-      <button
-        className="refresh"
-        onClick={tab === "films" ? () => rerank() : sendEmail}
-        aria-label={tab === "films" ? "Refresh" : "Send to email"}
-      >
-        {tab === "films" ? ICON_REFRESH : ICON_SEND}
-      </button>
-      <footer className="credit">
-        <a href="https://www.themoviedb.org/" target="_blank" rel="noreferrer">
-          {TMDB_LOGO}
-        </a>
-        <p>
-          This website uses TMDB and the TMDB APIs but is not endorsed, certified, or
-          otherwise approved by TMDB.
-        </p>
-      </footer>
+      <Footer />
     </>
   );
 }

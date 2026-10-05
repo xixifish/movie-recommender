@@ -51,11 +51,16 @@ textarea {
   color: inherit;
 }
 
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--body);
-  min-width: 800px;
 }
 
 /* Some people turn animation off at the system level */
