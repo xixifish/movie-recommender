@@ -23,6 +23,10 @@ export default function Details({
 
   const [playing, setPlaying] = useState(false);
 
+  // touch devices block autoplay, so the facade costs an extra tap there
+  const touch = window.matchMedia("(hover: none)").matches;
+  const showPlayer = film.tr && (playing || touch);
+
   useEffect(() => {
     function onKey(e) {
       if (e.key === "Escape") onClose();
@@ -44,7 +48,7 @@ export default function Details({
         </button>
         <div className="details">
           <div className="stage">
-            {playing ? (
+            {showPlayer ? (
               <iframe
                 className="media"
                 src={src}
