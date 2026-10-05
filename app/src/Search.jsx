@@ -12,8 +12,6 @@ const EXAMPLES = [
 ];
 
 export default function Search({ text, setText, runSearch, reset, searching, compact }) {
-  const chips = compact ? EXAMPLES.slice(0, 3) : EXAMPLES;
-
   function onSubmit(e) {
     e.preventDefault();
     runSearch(text);
@@ -58,7 +56,7 @@ export default function Search({ text, setText, runSearch, reset, searching, com
           </button>
         </form>
         <div className="chips">
-          {chips.map((q) => (
+          {EXAMPLES.map((q) => (
             <button key={q} onClick={() => onChip(q)}>
               {q}
             </button>
