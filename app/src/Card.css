@@ -22,7 +22,6 @@
     background 120ms;
 }
 
-.poster:hover::before,
 .poster.open::before {
   border-color: var(--line-strong);
   background: rgba(29, 17, 11, 0.25);
@@ -197,6 +196,10 @@
   .poster:hover .prompt {
     opacity: 1;
     transform: translateY(0);
+  }
+  .poster:hover::before {
+    border-color: var(--line-strong);
+    background: rgba(29, 17, 11, 0.25);
   }
 }
 
