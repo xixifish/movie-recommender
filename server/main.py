@@ -4,6 +4,7 @@ Turn a query into a vector, using the same model that made the film vectors.
 Run locally:
     uv run uvicorn server.main:app --reload --port 8000
 """
+
 import json
 from pathlib import Path
 
@@ -20,7 +21,7 @@ tokenizer = Tokenizer.from_file(str(HERE / "tokenizer.json"))
 session = ort.InferenceSession(str(HERE / "model.onnx"))
 
 pca = json.loads((HERE / "pca.json").read_text())
-matrix = np.array(pca["matrix"], dtype=np.float32).T   # 384 x 192
+matrix = np.array(pca["matrix"], dtype=np.float32).T  # 384 x 192
 print(f"pca matrix {matrix.shape}, {pca['dims']} dims")
 
 app = FastAPI()
@@ -33,12 +34,16 @@ app.add_middleware(
         "https://movie-recommender-delta-flame.vercel.app",
         # the live site goes here
     ],
+    # every Vercel preview gets its own hostname, so match them by pattern
+    allow_origin_regex=r"https://movie-recommender-.*-jings-projects-39fb96c0\.vercel\.app",
     allow_methods=["POST"],
     allow_headers=["*"],
 )
 
+
 class Query(BaseModel):
     q: str
+
 
 def embed(text):
     """Mean pool over the real tokens, normalise, then shrink with the PCA."""
@@ -61,6 +66,7 @@ def embed(text):
 
     v = v @ matrix
     return v / np.linalg.norm(v)
+
 
 @app.post("/embed")
 def embed_route(query: Query):
