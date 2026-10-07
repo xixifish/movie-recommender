@@ -25,3 +25,5 @@ dist-ssr
 
 .env.local.bak
 
+public/models/
+

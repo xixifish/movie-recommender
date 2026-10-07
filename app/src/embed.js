@@ -13,7 +13,12 @@ async function loadPca() {
 }
 
 export async function load() {
-  const { pipeline } = await import("@huggingface/transformers");
+  const { pipeline, env } = await import("@huggingface/transformers");
+
+  // Use our own copy, written into public/ by scrips/fetch-models.js
+  env.allowLocalModels = true;
+  env.allowRemoteModels = false;
+
   // q8 is the 23MB file measured in compare_model.py: 163 of 170 same films
   const extractor = await pipeline("feature-extraction", MODEL, { dtype: "q8" });
   const pca = await loadPca();
