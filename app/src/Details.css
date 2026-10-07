@@ -56,28 +56,6 @@
   border: 0;
 }
 
-.details .play {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 80px;
-  height: 54px;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: #ff0000;
-  color: var(--white);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.details .play svg {
-  width: 54px;
-  height: 54px;
-  fill: currentColor;
-}
-
 .details .info {
   padding: 24px 28px 28px;
   display: flex;

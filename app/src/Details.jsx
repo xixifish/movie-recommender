@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ICON_CLOSE, ICON_SAVE, THUMB_DOWN, THUMB_UP, ICON_PLAY } from "./icons";
+import { useEffect } from "react";
+import { ICON_CLOSE, ICON_SAVE, THUMB_DOWN, THUMB_UP } from "./icons";
 import { runtime } from "./format";
 import "./Details.css";
 
@@ -19,13 +19,7 @@ export default function Details({
   const overview = details?.overview[index] ?? "";
   const director = details?.director[index] ?? "";
   const cast = details?.cast[index] ?? "";
-  const src = `${YOUTUBE}${film.tr}?autoplay=1`;
-
-  const [playing, setPlaying] = useState(false);
-
-  // touch devices block autoplay, so the facade costs an extra tap there
-  const touch = window.matchMedia("(hover: none)").matches;
-  const showPlayer = film.tr && (playing || touch);
+  const src = `${YOUTUBE}${film.tr}`;
 
   useEffect(() => {
     function onKey(e) {
@@ -48,7 +42,7 @@ export default function Details({
         </button>
         <div className="details">
           <div className="stage">
-            {showPlayer ? (
+            {film.tr ? (
               <iframe
                 className="media"
                 src={src}
@@ -57,18 +51,7 @@ export default function Details({
                 allowFullScreen
               />
             ) : (
-              <>
-                <img className="media" src={IMG + (film.b || film.p)} alt="" />
-                {film.tr && (
-                  <button
-                    className="play"
-                    onClick={() => setPlaying(true)}
-                    aria-label="Play trailer"
-                  >
-                    {ICON_PLAY}
-                  </button>
-                )}
-              </>
+              <img className="media" src={IMG + (film.b || film.p)} alt="" />
             )}
           </div>
           <div className="info">

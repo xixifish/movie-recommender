@@ -288,7 +288,6 @@ export default function App() {
           )}
           {detailsOpen !== null && (
             <Details
-              key={detailsOpen}
               film={films[detailsOpen]}
               details={details}
               index={detailsOpen}
