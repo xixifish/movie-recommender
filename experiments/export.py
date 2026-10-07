@@ -65,4 +65,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 blocks = [np.load(DATA / f"vec_{f}_i8.npy") for f in FIELDS]
 np.concatenate(blocks).tofile(OUT / "vectors.bin")
 
+# 192 rows of 384, row after row
+np.array(pca["matrix"], dtype=np.float32).tofile(OUT / "pca.bin")
+
 print(f"{len(films)} films, {(OUT / 'vectors.bin').stat().st_size / 1e6:.0f}MB")
