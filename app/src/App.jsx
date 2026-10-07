@@ -7,11 +7,12 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 import { N, scoreAll, D } from "./rank.js";
+import { embed, loadModel } from "./embed.js";
 import Footer from "./Footer.jsx";
 
 const N_SHOWN = 48; // 6 film per row on screen
 
-const API = import.meta.env.VITE_API || "http://localhost:8000";
+// const API = import.meta.env.VITE_API || "http://localhost:8000";
 
 export default function App() {
   const [films, setFilms] = useState([]); // films
@@ -81,13 +82,7 @@ export default function App() {
 
     setSearching(true);
     try {
-      const res = await fetch(`${API}/embed`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ q }),
-      });
-      const data = await res.json();
-      const v = new Float32Array(data.v);
+      const v = await embed(q);
 
       setQuery(v);
       setRatings({}); // liked and disliked belonged to the old query
@@ -197,6 +192,9 @@ export default function App() {
       const vals = new Float32Array(bytes.length);
       for (let i = 0; i < bytes.length; i++) vals[i] = (bytes[i] * data.scale) / 127;
       setVecs(vals);
+
+      // Pre-load the model
+      loadModel();
 
       // warm the cache so the first open modal has no empty state
       fetch("/details.json")
