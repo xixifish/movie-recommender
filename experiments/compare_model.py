@@ -14,7 +14,6 @@ from pathlib import Path
 import numpy as np
 import onnxruntime as ort
 from fields import FIELDS
-from sentence_transformers import SentenceTransformer
 from tokenizers import Tokenizer
 
 HERE = Path(__file__).parent
@@ -29,6 +28,8 @@ QUALITY = 0.5
 
 # --- The two models ---
 tokenizer = Tokenizer.from_file(str(SERVER / "tokenizer.json"))
+# Turn off the padding behaviour of the tokenizer because transformers.js does not pad
+tokenizer.no_padding()
 session_full = ort.InferenceSession(str(SERVER / "model.onnx"))
 session_small = ort.InferenceSession(str(DATA / "model_quantized.onnx"))
 
@@ -43,8 +44,8 @@ masks = {f: np.array([bool(r[f]) for r in rows]) for f in FIELDS}
 pct = lambda a: a.argsort().argsort() / (len(a) - 1)
 quality = (
     pct(np.array([r["vote_count"] for r in rows], float))
-    + pct(np.array([r["vote_average"] for r in rows], float)) / 2
-)
+    + pct(np.array([r["vote_average"] for r in rows], float))
+) / 2
 back = {
     f: np.load(DATA / f"vec_{f}_i8.npy").astype(np.float32) * pca["scale"] / 127
     for f in FIELDS
