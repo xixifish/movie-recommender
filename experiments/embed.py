@@ -7,7 +7,7 @@ Job 2: embed each field, save data/vec_<field>.npy
 Usage:
     uv run experiments/embed.py
 
-To redo a field: delete data/texts.json and that field's .npy, then run again.
+Do not delete texts.json because movies.jsonl still has the duplicate that dedupe.py removed.
 """
 
 import json
@@ -97,7 +97,7 @@ def cert(m):
     return ""
 
 
-FIELDS = {
+GETTERS = {
     "overview": overview,
     "tagline": tagline,
     "genres": genres,
@@ -106,8 +106,8 @@ FIELDS = {
     "director": director,
     "reviews": reviews,
 }
+FIELDS = {f: GETTERS[f] for f in FIELD_NAMES}
 
-assert list(FIELDS) == FIELD_NAMES, "embed.py and fields.py disagree"
 
 # --- job 1: build the texts file ---
 
