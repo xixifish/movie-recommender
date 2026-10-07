@@ -7,26 +7,27 @@ or a lost connection costs only the films it had not reached yet.
 Usage:
     uv run experiments/fetch.py
 """
+
 import json
 import os
 import time
-
-import requests
-
 from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
-load_dotenv() # Reads the `.env` file and puts the values into `os.environ`
+
+load_dotenv()  # Reads the `.env` file and puts the values into `os.environ`
 
 TOKEN = os.environ["TMDB_TOKEN"]
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 BASE = "https://api.themoviedb.org/3"
 
-PAGES = 250      # 20 movies per page, so 250 pages -> 5,000 movies
-DELAY = 0.15     # 6 or 7 requests per second, well under the 40/sec limit
+PAGES = 250  # 20 movies per page, so 250 pages -> 5,000 movies
+DELAY = 0.15  # 6 or 7 requests per second, well under the 40/sec limit
 
 OUT = Path(__file__).parent.parent / "data" / "movies.jsonl"
 OUT_PRE = Path(__file__).parent.parent / "data" / "movies_pre.jsonl"
+
 
 def get(url, params=None):
     """GET with a retry on 429 (means too many requests)."""
@@ -50,14 +51,17 @@ def get_ids():
     ids = []
     # 250 calls
     for page in range(1, PAGES + 1):
-        data = get(f"{BASE}/discover/movie", {
-            # Find the movies with votes greater or equal to 200
-            "vote_count.gte": 200,
-            "sort_by": "vote_count.desc",
-            "include_adult": "false",
-            "language": "en-US",
-            "page": page,
-        })
+        data = get(
+            f"{BASE}/discover/movie",
+            {
+                # Find the movies with votes greater or equal to 200
+                "vote_count.gte": 200,
+                "sort_by": "vote_count.desc",
+                "include_adult": "false",
+                "language": "en-US",
+                "page": page,
+            },
+        )
         if not data["results"]:
             print("No more results")
             break
@@ -65,6 +69,7 @@ def get_ids():
         print(f"page {page}: {len(ids)} ids so far")
         time.sleep(DELAY)
     return ids
+
 
 def previous_ids():
     """Similar as `already_have()`, but returns a list to keep the order."""
@@ -77,6 +82,7 @@ def previous_ids():
                 ids.append(json.loads(line)["id"])
     print(f"{len(ids)} ids waiting for re-fetched new fields.")
     return ids
+
 
 def already_have():
     """Ids already in the file, so a re-run picks up where it stopped."""
@@ -107,12 +113,15 @@ def fetch_details(ids, done):
     # 5000 calls
     with open(OUT, "a") as f:
         for i, movie_id in enumerate(todo, 1):
-            detail = get(f"{BASE}/movie/{movie_id}", {
-                "append_to_response": "keywords,credits,reviews,videos,release_dates",
-                "language": "en-US",
-            })
+            detail = get(
+                f"{BASE}/movie/{movie_id}",
+                {
+                    "append_to_response": "keywords,credits,reviews,videos,release_dates",
+                    "language": "en-US",
+                },
+            )
             f.write(json.dumps(detail) + "\n")
-            f.flush()   # on disk now, so a crash loses nothing
+            f.flush()  # on disk now, so a crash loses nothing
 
             if i % 100 == 0:
                 print(f"fetched {i}/{len(todo)}")
@@ -125,7 +134,7 @@ if __name__ == "__main__":
 
     done = already_have()
     # ids = get_ids() # for accessing the most updated list from TMDB
-    ids = previous_ids() # the ids must match the vectors already built
+    ids = previous_ids()  # the ids must match the vectors already built
     fetch_details(ids, done)
 
     total = sum(1 for line in open(OUT) if line.strip())
