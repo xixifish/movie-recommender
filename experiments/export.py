@@ -6,15 +6,11 @@ from fields import FIELDS
 
 DATA = Path(__file__).parent.parent / "data"
 OUT = Path(__file__).parent.parent / "app" / "public"
-SERVER = Path(__file__).parent.parent / "server"
 
 rows = json.loads((DATA / "texts.json").read_text())
 default = json.loads((DATA / "default.json").read_text())
 
 pca = json.loads((DATA / "pca.json").read_text())
-
-# The server needs the same transform the films went through
-(SERVER / "pca.json").write_text(json.dumps(pca))
 
 # Calculate quality percentile rank
 votes = np.array([r["vote_count"] for r in rows], float)

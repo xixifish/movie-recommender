@@ -18,7 +18,6 @@ from tokenizers import Tokenizer
 
 HERE = Path(__file__).parent
 DATA = HERE.parent / "data"
-SERVER = HERE.parent / "server"
 
 TOP_N = 10
 W_FALLBACK = [0.38, 0.24, 0.14, 0.09, 0.05, 0.05, 0.05]
@@ -27,13 +26,13 @@ BLEND = 0.8
 QUALITY = 0.5
 
 # --- The two models ---
-tokenizer = Tokenizer.from_file(str(SERVER / "tokenizer.json"))
+tokenizer = Tokenizer.from_file(str(DATA / "tokenizer.json"))
 # Turn off the padding behaviour of the tokenizer because transformers.js does not pad
 tokenizer.no_padding()
-session_full = ort.InferenceSession(str(SERVER / "model.onnx"))
+session_full = ort.InferenceSession(str(DATA / "model.onnx"))
 session_small = ort.InferenceSession(str(DATA / "model_quantized.onnx"))
 
-pca = json.loads((SERVER / "pca.json").read_text())
+pca = json.loads((DATA / "pca.json").read_text())
 matrix = np.array(pca["matrix"], dtype=np.float32).T
 
 # --- The films, as the app sees them ---

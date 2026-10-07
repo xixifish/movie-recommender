@@ -12,8 +12,6 @@ import Footer from "./Footer.jsx";
 
 const N_SHOWN = 48; // 6 film per row on screen
 
-// const API = import.meta.env.VITE_API || "http://localhost:8000";
-
 export default function App() {
   const [films, setFilms] = useState([]); // films
   const [vecs, setVecs] = useState(null); // vector numbers of all films
