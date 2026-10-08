@@ -1,18 +1,20 @@
-# Movie Recommender
+# Popcorn
 
-User starts to use the recommender from entering an idea, then get a list of movies. Tap a few of them (liked/disliked, interested), and refresh the list moving closer to the user's taste. No need to sign in.
+A film recommender that learns from taps. Type an idea, get a list of films, mark a few, and press refresh. The list moves towards your taste. No sign-in.
+
+**Live**: [movie-recommender-delta-flame.vercel.app](https://movie-recommender-delta-flame.vercel.app/)
 
 ---
 
 ## The idea
 
-Most film sites need users to maintain a long list of movies to recommend. This one doesn't need to sign in, starting from a simple idea.
+Most film sites provide detailed information for users to search, and need users to maintain a personal record to recommend. This product does it in a light and fast way even without owning an account.
 
-Users firstly land on a search box, and after they type something like "vampire" or "something scary", then the movie recommendations appear below. The user could tap a film to mark it **watched** -> **liked** or **disliked**, Or mark it **interested**, which are both signals for reranking the movie list.
+Users firstly land on a search box, and after they type something like "vampire" or "something scary", then there will be a first batch of film recommendations for them.
 
-The interested movies can be saved into another list, and user could choose to send it to their email to watch later.
+Mark a film **liked** or **disliked**
 
-Tapped movies go grey and stay in place, only `refresh` button starts re-ranking to change the list.
+The saved films can be checked in another list, and the user could send it to their email for later watching (Sending the saved list by email is planned).
 
 **The tap loop is the product.** Search is only how it starts.
 
@@ -22,104 +24,71 @@ Tapped movies go grey and stay in place, only `refresh` button starts re-ranking
 
 **The rerank runs in the browser.** A catalogue of 4,999 films with precomputed vectors ships as a static file, and every rerank is a local dot product.
 
-The assumption is simple: doing the work locally gives the best experience.
-Nothing to wait for, and no server to go cold while someone is thinking.
+So a rerank takes about 10ms, with no server to wait for or to go cold.
 
-The catalogue is capped at 5,000 because the vectors have to reach the browser
-before they can be used. It is 6.7MB once reduced to 192 dimensions and packed
-as int8, and it downloads in two or three seconds while someone is reading the
-page and typing. A small server embeds the search query. Everything after that
-is local.
+The catalogue is capped at 5,000 because everything has to reach the browser before it can be used. The film vectors are 6.7MB once reduced to 192 dimensions and packed as int8, and 3.6MB over the network.
 
-The two halves are hosted separately, because they need different things. The
-app is files, so it sits on Vercel. The server holds a 90MB model in memory, so
-it sits on Render.
-
-```
-TMDB API -> fetch -> raw JSON -> embed -> { texts.json, vec_<field>.npy }
-                                                   |
-                                               browser
-                                                   |
-             query -> embed -> rank -> grid -> taps -> rerank
-```
-
-**None of this is built yet.** So far the work is the offline pipeline and the
-search quality. Everything from `browser` down is the assumption being tested,
-not a measurement.
+The query is embedded in the browser too, by an 8-bit copy of the same model: 23MB, or 15.6MB over the network. It starts downloading as soon as the page opens, so it is usually ready before someone finishes typing. After the first visit, the browser keeps it. Nothing runs on a server.
 
 ---
 
 ## How search works
 
-Each film has seven text fields: genres, tagline, overview, keywords, cast,
-director, reviews. **Each field is embedded separately**, not glued into one
-paragraph. In one blob, length becomes weight by accident: a 300 word review
-counts ten times more than a 30 word overview. Separate vectors make the weight
-a number you set.
+Each film has seven text fields: genres, tagline, overview, keywords, cast, director, reviews. **Each field is embedded separately**, and for every query the app decides how much each field counts, by how clearly it found a match. "Tom Hanks" needs the cast field. "vampire" barely needs it at all.
 
-**The weights are then chosen per query, automatically.** For each field, measure
-how far its top results sit above its own middle, then turn those gaps into
-weights. A field that finds something clear takes over. A field that finds
-nothing gets little say.
+**Embedding search is good at meaning and weak at facts.** A name the model never learned, like "Carey Mulligan", finds none of her films. The planned fix is **hybrid search**: an exact match on cast, director and title first, with the embedding ranking the rest.
 
-"Tom Hanks" needs the cast field high. "vampire" needs it near zero. No fixed set
-can serve both. Automatic weighting took "a Tom Hanks movie" from **0 out of 10**
-to **10 out of 10**, with no rule anywhere telling it the query was about a
-person.
-
-The method, step by step, is in
-[`docs/02-method.md`](docs/02-method.md).
+The method is in [`docs/02-method.md`](docs/02-method.md), and the results in [`docs/03-findings.md`](docs/03-findings.md).
 
 ---
 
 ## What the experiment found
 
-Seventeen test queries, scored by hand against rules written before any results
-were seen.
+Seventeen test queries, scored by hand against rules written before any results were seen.
 
-| Query type                                         | Score |
-| -------------------------------------------------- | ----- |
-| names, like "a Christopher Nolan movie"            | 19/20 |
-| mood, like "really scary"                          | 37/40 |
-| topic, like "vampire"                              | 44/50 |
-| two ideas at once, like "fall in love with a city" | 28/50 |
+| Query type                                         | Score       |
+| -------------------------------------------------- | ----------- |
+| names, like "a Christopher Nolan movie"            | 19/20       |
+| mood, like "really scary"                          | 37/40       |
+| topic, like "vampire"                              | 44/50       |
+| two ideas at once, like "fall in love with a city" | 28/60       |
+| **total**                                          | **128/170** |
 
-**Embeddings are good at meaning and bad at facts.** Filters are the opposite.
-The design needs both, and the queries that ask for two things at once are the
-ones still waiting on it.
-
-Full write-up in [`docs/03-findings.md`](docs/03-findings.md). Raw runs, with the settings and the per-query weights that produced each one, in `experiments/results/`.
+These were scored in August, on the full-size vectors. The live app runs on compressed vectors and an 8-bit model in the browser, and 155 of the 170 films scored here still appear in its top 10 lists.
 
 ---
 
 ## Stack
 
 - Python and `uv` for the offline pipeline
-- TMDB API for metadata and posters
-- `sentence-transformers`, model `all-MiniLM-L6-v2`, 384 dims
-- Frontend: not chosen yet
-- Hosting: static, plus one function
+- TMDB API for metadata, posters and trailers
+- `sentence-transformers`, model `all-MiniLM-L6-v2`: films embedded at 384 dims, then reduced to 192 with PCA and packed as int8
+- React and Vite for the app
+- `transformers.js` for the query, running an 8-bit copy of the same model in the browser
+- Vercel for hosting. Static files only, no server
 
 ---
 
 ## Repo
 
 ```
+app/          the React app, and the files it ships in public/
+experiments/  the data pipeline (fetch, embed, shrink, export) and the experiments
 docs/         the product, the method, the findings
 notes/        where the project stands
-experiments/  fetch, embed, search, and every saved run
-data/         raw JSON and vectors (not committed)
+data/         raw JSON, vectors and model files (not committed)
+assets/       images for the docs
 ```
 
 ---
 
 ## Next
 
-Design and build. The search is good enough to start, and the tap loop cannot be
-judged without a person tapping.
+The app is built and live. A first user test with two people led to a full redesign. Next:
 
-The full list, with what is still open, is in
-[`notes/progress.md`](notes/progress.md).
+1. **Hybrid search**: exact matching for names and titles.
+2. **A user test with 5 to 10 people**, to see whether the tap loop really moves the list towards what people want.
+3. **An LLM filter** for queries that ask for two things at once.
 
 ---
 
