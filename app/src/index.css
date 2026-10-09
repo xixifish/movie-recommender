@@ -4,7 +4,7 @@
   --line-strong: rgba(239, 219, 209, 1);
   --surface: #29211d;
   --ink: #efdbd1;
-  --dim: #c7a695;
+  --dim: #cbad9e;
   --accent: #ff5700;
   --accent-dark: #ca4500;
   --white: #ffffff;
@@ -12,6 +12,7 @@
   --body: "Source Sans 3 Variable", system-ui, sans-serif;
   --tapped-dark: #463933;
   --modal-bg: #2f1e15;
+  --loading-bg: #86766e;
 
   --page: 1280px;
 

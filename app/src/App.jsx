@@ -36,6 +36,9 @@ export default function App() {
 
   const [roundSaves, setRoundSaves] = useState({});
 
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [modelReady, setModelReady] = useState(false);
+
   // Tap logo to reset the page
   function reset() {
     skipScroll.current = true;
@@ -80,8 +83,11 @@ export default function App() {
 
     setSearching(true);
     try {
+      // Make sure a download started by this search reports progress to the button
+      loadModel(setLoadingProgress);
       const v = await embed(q);
 
+      setModelReady(true);
       setQuery(v);
       setRatings({}); // liked and disliked belonged to the old query
       setRoundSaves({});
@@ -160,7 +166,7 @@ export default function App() {
   // Send the saved list to an email address. Not built yet.
   function sendEmail() {}
 
-  // Load all the vectors of 5,000 films
+  // Load all the vectors of 4,999 films
   useEffect(() => {
     async function load() {
       const [filmsRes, vecRes] = await Promise.all([
@@ -192,7 +198,9 @@ export default function App() {
       setVecs(vals);
 
       // Pre-load the model
-      loadModel();
+      loadModel(setLoadingProgress)
+        .then(() => setModelReady(true))
+        .catch(() => {});
 
       // warm the cache so the first open modal has no empty state
       fetch("/details.json")
@@ -239,6 +247,8 @@ export default function App() {
         reset={reset}
         searching={searching}
         compact={query !== null} // A resresent value for sticky search bar
+        progress={loadingProgress}
+        loading={searching && !modelReady}
       />
       {searched && (
         <>

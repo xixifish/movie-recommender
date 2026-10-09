@@ -11,7 +11,16 @@ const EXAMPLES = [
   "Tom Hanks",
 ];
 
-export default function Search({ text, setText, runSearch, reset, searching, compact }) {
+export default function Search({
+  text,
+  setText,
+  runSearch,
+  reset,
+  searching,
+  compact,
+  progress,
+  loading,
+}) {
   function onSubmit(e) {
     e.preventDefault();
     runSearch(text);
@@ -43,16 +52,21 @@ export default function Search({ text, setText, runSearch, reset, searching, com
           </section>
         )}
         <form className="search" onSubmit={onSubmit}>
-          <span className="search-icon">{ICON_SEARCH}</span>
           <input
             id="q"
             autoComplete="off"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Anything you feel like watching"
+            placeholder="What do you feel like watching?"
           />
-          <button type="submit" disabled={searching}>
-            {searching ? "Searching" : "Search"}
+          <button
+            type="submit"
+            className={loading ? "loading" : undefined}
+            disabled={searching}
+            aria-label="Search"
+            style={{ "--progress": progress }}
+          >
+            {ICON_SEARCH}
           </button>
         </form>
         <div className="chips">
