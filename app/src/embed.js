@@ -9,10 +9,11 @@ let modelPromise = null; // set on the first call, shared by every caller after
 
 async function loadPca() {
   const res = await fetch("/pca.bin");
+  if (!res.ok) throw new Error(`pca.bin: ${res.status}`);
   return new Float32Array(await res.arrayBuffer());
 }
 
-export async function load() {
+async function load(onProgress) {
   const { pipeline, env } = await import("@huggingface/transformers");
 
   // Use our own copy, written into public/ by scrips/fetch-models.js
@@ -20,13 +21,24 @@ export async function load() {
   env.allowRemoteModels = false;
 
   // q8 is the 23MB file measured in compare_model.py: 163 of 170 same films
-  const extractor = await pipeline("feature-extraction", MODEL, { dtype: "q8" });
+  const extractor = await pipeline("feature-extraction", MODEL, {
+    dtype: "q8",
+    // Call many times during the dowload. Only the total across all files matters here
+    progress_callback: (info) => {
+      if (info.status === "progress_total" && onProgress) onProgress(info.progress / 100);
+    },
+  });
   const pca = await loadPca();
   return { extractor, pca };
 }
 
-export function loadModel() {
-  if (!modelPromise) modelPromise = load();
+export function loadModel(onProgress) {
+  if (!modelPromise) {
+    modelPromise = load(onProgress).catch((err) => {
+      modelPromise = null; // so the next call starts a fresh download
+      throw err;
+    });
+  }
   return modelPromise;
 }
 
