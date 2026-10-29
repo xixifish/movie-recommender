@@ -16,3 +16,4 @@ data/*
 !data/pca.json
 
 notes/revision-list.md
+docs/05-user-test.md
