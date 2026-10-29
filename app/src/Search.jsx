@@ -5,10 +5,10 @@ const EXAMPLES = [
   "makes me cry",
   "time travel",
   "a road trip",
+  "Tom Hanks",
   "something funny",
   "vampire",
   "witches and wizards",
-  "Tom Hanks",
 ];
 
 export default function Search({
@@ -37,7 +37,9 @@ export default function Search({
         <header className="top">
           <button className="logo" onClick={reset} aria-label="Start again">
             {LOGO}
-            <span>POPCORN</span>
+            <span>
+              POP<span className="corn">CORN</span>
+            </span>
           </button>
         </header>
         {!compact && (
@@ -76,6 +78,15 @@ export default function Search({
             </button>
           ))}
         </div>
+        {!compact && (
+          <picture className="art">
+            <source
+              srcSet="/landing-still.webp"
+              media="(prefers-reduced-motion: reduce)"
+            />
+            <img src="/landing.webp" alt="" width={450} height={343} />
+          </picture>
+        )}
       </div>
     </div>
   );

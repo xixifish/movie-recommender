@@ -6,8 +6,12 @@
   border-bottom: 1px solid var(--line);
 }
 
+.search-bar {
+  --search-width: 450px; /* search box, chips and the left column on wide screens */
+}
+
 .search-wrap {
-  padding-inline: 16px;
+  padding-inline: 20px;
 }
 
 .search-bar.compact .search-wrap {
@@ -20,7 +24,7 @@
 .top {
   display: flex;
   justify-content: center;
-  padding: 22px 40px;
+  padding: 22px 40px 0;
 }
 
 .search-bar.compact .top {
@@ -36,12 +40,16 @@
   color: inherit;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   font-family: var(--display);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 18px;
+  letter-spacing: 0.04em;
+  font-size: 20px;
   flex: none;
+}
+
+.logo .corn {
+  color: var(--accent);
 }
 
 .logo svg {
@@ -52,15 +60,15 @@
 
 .hero {
   text-align: center;
-  padding: 100px 0 0;
+  padding: 50px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .hero h1 {
   font-family: var(--display);
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: clamp(34px, 5vw, 43px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -71,7 +79,7 @@
 }
 
 .hero .light {
-  color: rgb(239 219 209 / 0.8);
+  color: rgb(239 219 209 / 0.75);
 }
 
 .top,
@@ -81,8 +89,7 @@
 }
 
 .eyebrow {
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -91,8 +98,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(100%, 560px);
-  margin: 32px auto 0;
+  width: min(100%, var(--search-width));
+  margin: 50px auto 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -101,7 +108,7 @@
 
 .search-bar.compact .search {
   flex: 1;
-  max-width: 400px;
+  max-width: var(--search-width);
   margin: 0;
   min-width: 0;
 }
@@ -126,7 +133,7 @@
 }
 
 .search button {
-  width: 64px;
+  width: 60px;
   align-self: stretch;
   display: grid;
   place-items: center;
@@ -187,14 +194,16 @@
 
 .chips {
   display: flex;
+  width: min(100%, var(--search-width));
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-top: 18px;
+  margin: 24px auto 0;
 }
 
 .search-bar.compact .chips {
   flex-wrap: nowrap;
+  width: auto;
   margin: 0;
 }
 
@@ -220,20 +229,23 @@
     color 120ms;
 }
 
+.art {
+  display: block;
+  margin-top: 56px;
+}
+
+.art img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
 /* Responsive */
 
 @media (max-width: 620px) {
   .search-bar.compact .top span {
     display: none;
-  }
-}
-
-@media (max-width: 430px) {
-  .search button {
-    width: 48px;
-  }
-  .search input {
-    padding: 8px 0;
   }
 }
 
@@ -272,4 +284,66 @@
   .search-bar.compact .chips {
     display: none;
   } /* none */
+}
+
+/* Wide screens: text on the left, picture on the right */
+@media (min-width: 900px) {
+  .search-bar:not(.compact) .search-wrap {
+    display: grid;
+    grid-template-columns: var(--search-width) minmax(0, 450px);
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas:
+      "logo   logo"
+      "hero   art"
+      "search art"
+      "chips  art"
+      ".      art";
+    justify-content: center;
+  }
+
+  .search-bar:not(.compact) .top {
+    grid-area: logo;
+    justify-content: flex-start;
+    padding: 150px 0 0;
+    margin: 0 0 50px;
+  }
+
+  /* The 50px gap moves from the hero to under the logo, so the picture
+     lines up with the eyebrow, not with the empty space above it */
+  .search-bar:not(.compact) .hero {
+    grid-area: hero;
+    text-align: left;
+    padding-top: 0;
+    margin-inline: 0;
+  }
+
+  .search-bar:not(.compact) .eyebrow {
+    font-size: 14px;
+  }
+
+  .search-bar:not(.compact) .hero h1 {
+    line-height: 0.93;
+  }
+
+  .search-bar:not(.compact) .search {
+    grid-area: search;
+    margin-inline: 0;
+  }
+
+  .search-bar:not(.compact) .search button {
+    width: 80px;
+  }
+
+  .search-bar:not(.compact) .chips {
+    grid-area: chips;
+    width: auto;
+    justify-content: flex-start;
+    margin-inline: 0;
+  }
+
+  /* Lift the image a little bit to make balanced visually */
+  .search-bar:not(.compact) .art {
+    grid-area: art;
+    margin-top: -10px;
+  }
 }

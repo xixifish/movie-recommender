@@ -59,6 +59,7 @@ textarea {
 }
 
 body {
+  min-width: 320px;
   background: var(--ground);
   color: var(--ink);
   font-family: var(--body);
