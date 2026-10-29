@@ -1,5 +1,7 @@
 # Interface
 
+> Written for the first version, before the redesign after the user test. The card, the minimum width and the loading state have changed since.
+
 How the interface behaves, and how it moves. A reference for building.
 
 Updated 17 Sep 2026

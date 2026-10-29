@@ -4,7 +4,7 @@
 
 The results are in `docs/03-findings.md`.
 
-Updated 15 Sep 2026
+Updated 29 Oct 2026
 
 ---
 
@@ -70,7 +70,7 @@ Each field is capped on its own, for every film. Each field is embedded on its o
 
 ## 4. One vector per field
 
-`experiments/embed.py`. Seven files, `data/vec_<field>.npy`, 5,000 x 384 each.
+`experiments/embed.py`. Seven files, `data/vec_<field>.npy`, 384 numbers per film. `dedupe.py` then removes one duplicate film, leaving 4,999 rows.
 
 Separate vectors make weight a number can be set:
 
@@ -158,18 +158,19 @@ changes.
 
 ### The size is not the limit
 
-At 128 dims, packed to one byte per number:
+At 192 dims for each of the 7 fields, packed to one byte per number:
 
-| Catalogue | Download | Rerank     |
-| --------- | -------- | ---------- |
-| 5,000     | 4.5MB    | about 10ms |
-| 10,000    | 9MB      | about 25ms |
-| 20,000    | 18MB     | about 50ms |
+| Catalogue | Download (over the network) | Rerank     |
+| --------- | --------------------------- | ---------- |
+| 5,000     | 6.7MB (3.6MB)               | about 15ms |
+| 10,000    | 13.4MB (7.2MB)              | about 30ms |
+| 20,000    | 26.9MB (14.4MB)             | about 60ms |
 
-10,000 would work. So would 20,000. The download also overlaps with the user
-reading the page and typing, so it will not block.
+10,000 would work. 20,000 is possible, but its vectors would be as big as the
+query model, which the browser also downloads (15.6MB over the network). The
+download overlaps with the user reading the page and typing, so it will not block.
 
-**Refreshing reloads the posters.** The whole vector file is 4.5MB, downloaded once and then cached. A grid of 50 posters is roughly 3MB, and each refresh pulls some that are not cached yet.
+**Refreshing reloads the posters.** The whole vector file is 6.7MB (3.6MB over the network), downloaded once and then cached. A grid of 50 posters is roughly 3MB, and each refresh pulls some that are not cached yet.
 
 Use `lazy` loading and `async` decoding for the `<img>`.
 

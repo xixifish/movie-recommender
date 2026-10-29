@@ -1,5 +1,7 @@
 # Progress
 
+> Last full update 21 Sep 2026. Since then: the redesign, the query model moved into the browser and the Render server was removed (Oct 2026). See the main README for the current state.
+
 Where the project stands.
 Source of truth for the product is `docs/01-introduction.md`.
 
