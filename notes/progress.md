@@ -105,10 +105,10 @@ Results are in `docs/03-findings.md`. Runs are in `experiments/results/`.
 7. The whole loop works end to end. Type an idea, get films, mark them, press
    Refresh, the list moves. Typing "alien movies" on a clean page puts
    _Alien_ (1979) first, which matches the Python run exactly.
-8. It is live. The app is on Vercel, the server on Render, and `vectors.bin`
-   is 6.7MB instead of 53MB. A search takes 2 to 3 seconds, because the free
-   Render plan gives a tenth of a CPU. The server sleeps when unused, so the
-   first search after a quiet spell takes much longer.
+8. It is live on Vercel as static files, and `vectors.bin` is 6.7MB instead of
+   53MB. The query model runs in the browser, so there is no server. (Until Oct
+   2026 a server on Render embedded the query: 2 to 3 seconds per search on the
+   free plan, and much longer after it slept.)
 
 ---
 

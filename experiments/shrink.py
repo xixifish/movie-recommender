@@ -2,19 +2,23 @@
 Shrink the vectors for the browser, and measure what it costs.
 
 Two compressions:
-    384 floats -> 128 floats PCA, keeps the directions of the vectors
-    128 floats -> 128 int8   one byte each instead of four
+    384 floats -> 192 floats PCA, keeps the directions of the vectors
+    192 floats -> 192 int8   one byte each instead of four
 
-Compress the size but loses information, so this needs to run the 17 queries 
-before and after and reports how much the top 10 lists agree.
+The PCA does not centre the data: cosine similarity measures angles from the origin,
+and subtracting the mean changes every angle. See findings 15.
+
+Compressing loses information, so this runs the 17 queries before and after, and
+reports how much the top 10 lists agree.
 
 Writes:
-    data/pca.json: the mean and the 384 x 128 metrix, for export and the server
+    data/pca.json: the 384 x 192 metrix and the int8 scale, for export.py
     data/vec_<field>_i8.npy: seven quantised field sets
 
 Usage:
     uv run experiments/shrink.py
 """
+
 import json
 from pathlib import Path
 
@@ -49,22 +53,26 @@ for name in FIELDS:
 # `.argsort().argsort()`: writes ranks for each element to their original position from 0 to len(a) - 1
 pct = lambda a: a.argsort().argsort() / (len(a) - 1)
 quality = (
-    pct(np.array([r["vote_count"] for r in rows], float)) + pct(np.array([r["vote_average"] for r in rows], float))
+    pct(np.array([r["vote_count"] for r in rows], float))
+    + pct(np.array([r["vote_average"] for r in rows], float))
 ) / 2
 
 # -- fit the PCA on every vector from every field --
 stacked = np.concatenate([full_vectors[f] for f in FIELDS])
 
 # eigenvectors of the covariance, largest first. Faster than an SVD of 35,000 rows.
-g = (stacked.T @ stacked) / len(stacked) # build the summary (384 x 384)
-vals, vecs = np.linalg.eigh(g) # find the directions (eigen values and eigen vectors)
+g = (stacked.T @ stacked) / len(stacked)  # build the summary (384 x 384)
+vals, vecs = np.linalg.eigh(g)  # find the directions (eigen values and eigen vectors)
 
 # Rank the eigen values to find the most stretched directions
 order = vals.argsort()[::-1]
-matrix = vecs[:, order[:DIMS]].astype(np.float32) # 384 x 192
+matrix = vecs[:, order[:DIMS]].astype(np.float32)  # 384 x 192
 
 kept = vals[order[:DIMS]].sum() / vals.sum()
-print(f"PCA {stacked.shape[1]} -> {DIMS} dims, keeps {kept * 100:.1f}% of the variation")
+print(
+    f"PCA {stacked.shape[1]} -> {DIMS} dims, keeps {kept * 100:.1f}% of the variation"
+)
+
 
 def shrink(v):
     """384 floats to 192, the same way for films and for the query."""
@@ -73,13 +81,14 @@ def shrink(v):
     # `np.linalg.norm()` calculates the length of the vector
     return out / np.linalg.norm(out, axis=-1, keepdims=True)
 
+
 small = {f: shrink(full_vectors[f]) for f in FIELDS}
 
 # --- quantise to int8 ---
 # Find the biggest number in the small
 scale = float(max(np.abs(small[f]).max() for f in FIELDS))
 # small[f] / scale -> make every number to [-1, 1], then * 127 to make them [-127, 127]
-# Then np.round() to remove the decimal numbers ->  still float32, 4 bytes 
+# Then np.round() to remove the decimal numbers ->  still float32, 4 bytes
 # .astype(np.int8) transform the numbers to int8 -> 1 byte
 q8 = {f: np.round(small[f] / scale * 127).astype(np.int8) for f in FIELDS}
 back = {f: q8[f].astype(np.float32) * scale / 127 for f in FIELDS}
@@ -87,6 +96,7 @@ print(f"int8 scale {scale:.4f}")
 
 
 # --- scoring, the same as search.py ---
+
 
 def rank(sets, q):
     """Top TOP_N film indices for one query vector."""
@@ -105,8 +115,8 @@ def rank(sets, q):
     num = np.zeros(n)
     den = np.zeros(n)
     for i, f in enumerate(FIELDS):
-        num += np.where(masks[f], w[i] * sims[f], 0) # this field's contribution
-        den += np.where(masks[f], w[i], 0) # this field's share of the total
+        num += np.where(masks[f], w[i] * sims[f], 0)  # this field's contribution
+        den += np.where(masks[f], w[i], 0)  # this field's share of the total
     score = (num / np.maximum(den, 1e-9)) * (1 + QUALITY * quality)
     return list(np.argsort(score)[::-1][:TOP_N])
 
@@ -135,11 +145,15 @@ print(f"same order: {same_order}/{total} ({same_order / total * 100:.0f}%)")
 
 # --- save ---
 
-(DATA / "pca.json").write_text(json.dumps({
-    "dims": DIMS,
-    "scale": scale,
-    "matrix": matrix.T.tolist(),      # 128 rows of 384, easier to read back
-}))
+(DATA / "pca.json").write_text(
+    json.dumps(
+        {
+            "dims": DIMS,
+            "scale": scale,
+            "matrix": matrix.T.tolist(),  # 192 rows of 384, easier to read back
+        }
+    )
+)
 for f in FIELDS:
     np.save(DATA / f"vec_{f}_i8.npy", q8[f])
-print(f"\nwrote data/pca.json and 7 int8 field files")
+print("\nwrote data/pca.json and 7 int8 field files")

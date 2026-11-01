@@ -16,14 +16,14 @@ async function loadPca() {
 async function load(onProgress) {
   const { pipeline, env } = await import("@huggingface/transformers");
 
-  // Use our own copy, written into public/ by scrips/fetch-models.js
+  // Use our own copy, written into public/ by scripts/fetch-models.js
   env.allowLocalModels = true;
   env.allowRemoteModels = false;
 
   // q8 is the 23MB file measured in compare_model.py: 163 of 170 same films
   const extractor = await pipeline("feature-extraction", MODEL, {
     dtype: "q8",
-    // Call many times during the dowload. Only the total across all files matters here
+    // Call many times during the download. Only the total across all files matters here
     progress_callback: (info) => {
       if (info.status === "progress_total" && onProgress) onProgress(info.progress / 100);
     },
