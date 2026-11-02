@@ -12,7 +12,7 @@ Compressing loses information, so this runs the 17 queries before and after, and
 reports how much the top 10 lists agree.
 
 Writes:
-    data/pca.json: the 384 x 192 metrix and the int8 scale, for export.py
+    data/pca.json: the 384 x 192 matrix and the int8 scale, for export.py
     data/vec_<field>_i8.npy: seven quantised field sets
 
 Usage:

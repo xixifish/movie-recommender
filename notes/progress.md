@@ -36,7 +36,7 @@ The saved list can be sent to an email address later.
 | Screen     | Desktop only for now. `min-width: 700px`, and the card controls need hover   |
 | Marks      | `liked`, `disliked`, `saved`                                                 |
 | Shipped    | 192 dims, int8, 6.7MB. See finding 15                                        |
-| Hosting    | App on Vercel, server on Render. `VITE_API` joins them                       |
+| Hosting    | Vercel, static files only. The query model runs in the browser               |
 
 ---
 

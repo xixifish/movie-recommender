@@ -16,7 +16,7 @@ async function loadPca() {
 async function load(onProgress) {
   const { pipeline, env } = await import("@huggingface/transformers");
 
-  // Use our own copy, written into public/ by scripts/fetch-models.js
+  // Use our own copy, written into public/ by scripts/fetch-model.js
   env.allowLocalModels = true;
   env.allowRemoteModels = false;
 
