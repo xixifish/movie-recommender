@@ -1,0 +1,123 @@
+.share {
+  width: min(560px, 100%);
+  padding: 28px;
+  background: var(--modal-bg);
+  border-radius: 20px;
+}
+
+.share-backdrop {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.share h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.share textarea {
+  display: block;
+  width: 100%;
+  /* 6 lines where the box cannot grow. Chrome and Edge grow it to fit the text,
+     between 4 and 10 lines, then it scrolls */
+  height: calc(6lh + 32px);
+  min-height: calc(4lh + 32px);
+  max-height: calc(10lh + 32px);
+  field-sizing: content;
+  padding: 16px;
+  font-size: 16px; /* under 16px, iPhones zoom in when the box is tapped */
+  line-height: 1.5;
+  background: var(--tapped-dark);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.share textarea:focus {
+  outline: none;
+  border-color: var(--line-strong);
+}
+
+.share .row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.share .hint {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.share .row button {
+  flex: none;
+  min-width: 120px; /* fits "✓ Copied", so the button keeps its size */
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.share .secondary {
+  background: none;
+  color: var(--accent);
+}
+
+.share .secondary:hover {
+  background: rgb(255 87 0 / 0.1);
+}
+
+.share .primary {
+  background: var(--accent);
+  color: var(--white);
+}
+
+.share .primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Read by screen readers, not shown on screen */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 430px) {
+  /* Near the top, so the keyboard does not cover the buttons */
+  .share-backdrop {
+    place-items: start center;
+    padding-top: 70px;
+  }
+  .share {
+    padding: 20px;
+  }
+  .share h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .share .row {
+    flex-wrap: wrap;
+  }
+  .share .hint {
+    flex-basis: 100%;
+  }
+  .share .row button {
+    flex: 1;
+    font-size: 16px;
+  }
+  .share textarea {
+    font-size: 14px;
+  }
+}

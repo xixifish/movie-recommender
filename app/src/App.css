@@ -100,12 +100,17 @@
     transform 120ms;
 }
 
-.refresh:hover {
+.refresh:not(:disabled):hover {
   background: var(--accent-dark);
 }
 
-.refresh:active {
+.refresh:not(:disabled):active {
   transform: scale(0.96);
+}
+
+.refresh:disabled {
+  background-color: var(--loading-bg);
+  cursor: not-allowed;
 }
 
 .refresh svg {

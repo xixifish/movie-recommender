@@ -1,7 +1,8 @@
-import { ICON_PICKS, ICON_REFRESH, ICON_SAVE } from "./icons.jsx";
+import { ICON_PICKS, ICON_REFRESH, ICON_SAVE, ICON_SEND } from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 import Details from "./Details.jsx";
+import Share from "./Share.jsx";
 
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
@@ -38,6 +39,8 @@ export default function App() {
 
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [modelReady, setModelReady] = useState(false);
+
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Tap logo to reset the page
   function reset() {
@@ -303,9 +306,22 @@ export default function App() {
               onClose={() => setDetailsOpen(null)}
             />
           )}
+          {shareOpen && (
+            <Share films={films} saved={saved} onClose={() => setShareOpen(false)} />
+          )}
           {tab === "picks" && (
             <button className="refresh" onClick={() => rerank()} aria-label="Refresh">
               {ICON_REFRESH}
+            </button>
+          )}
+          {tab === "saved" && (
+            <button
+              className="refresh"
+              aria-label="Share saved films"
+              disabled={!Object.values(saved).some(Boolean)}
+              onClick={() => setShareOpen(true)}
+            >
+              {ICON_SEND}
             </button>
           )}
         </>
