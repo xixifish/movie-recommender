@@ -1,4 +1,4 @@
-import { ICON_PICKS, ICON_REFRESH, ICON_SAVE, ICON_SEND } from "./icons.jsx";
+import { ICON_PICKS, ICON_REFRESH, ICON_SAVE } from "./icons.jsx";
 import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 import Details from "./Details.jsx";
@@ -163,9 +163,6 @@ export default function App() {
     setMenuOpen(null);
   }
 
-  // Send the saved list to an email address. Not built yet.
-  function sendEmail() {}
-
   // Load all the vectors of 4,999 films
   useEffect(() => {
     async function load() {
@@ -306,13 +303,11 @@ export default function App() {
               onClose={() => setDetailsOpen(null)}
             />
           )}
-          <button
-            className="refresh"
-            onClick={tab === "picks" ? () => rerank() : sendEmail}
-            aria-label={tab === "picks" ? "Refresh" : "Send to email"}
-          >
-            {tab === "picks" ? ICON_REFRESH : ICON_SEND}
-          </button>
+          {tab === "picks" && (
+            <button className="refresh" onClick={() => rerank()} aria-label="Refresh">
+              {ICON_REFRESH}
+            </button>
+          )}
         </>
       )}
       <Footer />
