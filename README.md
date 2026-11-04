@@ -18,7 +18,7 @@ Designed and built by Jing, from the data pipeline to the interface.
 2. **Mark a few films.** Like, dislike or save any film in the list. Tap a poster to see its trailer, runtime and age rating.
 3. **Press Refresh.** The whole catalogue is ranked again, towards what you marked. Repeat as often as you like.
 
-Saved films stay in their own list. Sending that list to your email is planned.
+Saved films stay in their own list. You can share, email or copy that list, and edit it first.
 
 Most film sites need an account and a viewing history before they can recommend anything. Popcorn needs one idea and a few taps. **The tap loop is the product.** Search is only how it starts.
 
