@@ -68,18 +68,10 @@ export default function App() {
   const searched = query !== null;
 
   const [tab, setTab] = useState("picks");
-  const [savedList, setSavedList] = useState([]);
-
+  const savedList = Object.keys(saved)
+    .filter((k) => saved[k])
+    .map(Number);
   const list = tab === "saved" ? savedList : shown;
-
-  function openSaved() {
-    setSavedList(
-      Object.keys(saved)
-        .filter((k) => saved[k])
-        .map(Number),
-    );
-    setTab("saved");
-  }
 
   async function runSearch(q) {
     if (!q.trim()) return;
@@ -261,7 +253,10 @@ export default function App() {
                 {ICON_PICKS}
                 Picks
               </button>
-              <button className={tab === "saved" ? "on" : undefined} onClick={openSaved}>
+              <button
+                className={tab === "saved" ? "on" : undefined}
+                onClick={() => setTab("saved")}
+              >
                 {ICON_SAVE}
                 Saved
               </button>
@@ -318,7 +313,7 @@ export default function App() {
             <button
               className="refresh"
               aria-label="Share saved films"
-              disabled={!Object.values(saved).some(Boolean)}
+              disabled={savedList.length === 0}
               onClick={() => setShareOpen(true)}
             >
               {ICON_SEND}
