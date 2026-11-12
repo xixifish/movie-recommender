@@ -3,6 +3,7 @@ import Search from "./Search.jsx";
 import Card from "./Card.jsx";
 import Details from "./Details.jsx";
 import Share from "./Share.jsx";
+import { readSavedIds, readStorage, writeStorage } from "./storage.js";
 
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
@@ -57,12 +58,8 @@ export default function App() {
   }
 
   // Saved and rated prompts
-  const [hasSaved, setHasSaved] = useState(
-    () => localStorage.getItem("hasSaved") === "1",
-  );
-  const [hasRated, setHasRated] = useState(
-    () => localStorage.getItem("hasRated") === "1",
-  );
+  const [hasSaved, setHasSaved] = useState(() => readStorage("hasSaved") === "1");
+  const [hasRated, setHasRated] = useState(() => readStorage("hasRated") === "1");
 
   // Display the tabs or not
   const searched = query !== null;
@@ -101,7 +98,7 @@ export default function App() {
     setRatings((r) => ({ ...r, [i]: r[i] === kind ? undefined : kind }));
     if (!hasRated) {
       setHasRated(true);
-      localStorage.setItem("hasRated", "1");
+      writeStorage("hasRated", "1");
     }
   }
 
@@ -112,7 +109,7 @@ export default function App() {
     setRoundSaves((s) => ({ ...s, [i]: s[i] ? undefined : true }));
     if (!hasSaved) {
       setHasSaved(true);
-      localStorage.setItem("hasSaved", "1");
+      writeStorage("hasSaved", "1");
     }
   }
 
@@ -172,7 +169,7 @@ export default function App() {
 
       // Bring back what was saved last time, by film id
       const byId = new Map(data.films.map((f, i) => [f.id, i]));
-      const ids = JSON.parse(localStorage.getItem("saved") || "[]");
+      const ids = readSavedIds(readStorage("saved"));
       setSaved(
         Object.fromEntries(
           ids.map((id) => [byId.get(id), true]).filter(([i]) => i !== undefined),
@@ -208,7 +205,7 @@ export default function App() {
     const ids = Object.keys(saved)
       .filter((k) => saved[k])
       .map((k) => films[k].id);
-    localStorage.setItem("saved", JSON.stringify(ids));
+    writeStorage("saved", JSON.stringify(ids));
   }, [saved, films]);
 
   // Refresh and jump to the list top
