@@ -94,12 +94,18 @@ function dot(a, b) {
 
 // Normalise the taste vector
 function normalise(taste) {
-  if (!taste) return;
+  if (!taste) return null;
 
-  const vecLength = Math.sqrt(dot(taste, taste));
+  const unit = taste.slice();
+  const vecLength = Math.sqrt(dot(unit, unit));
+
+  if (vecLength === 0) return unit;
+
   for (let d = 0; d < D; d++) {
-    taste[d] /= vecLength;
+    unit[d] /= vecLength;
   }
+
+  return unit;
 }
 
 // Score all the 5,000 films over one field
@@ -205,8 +211,8 @@ export function scoreAll(ctx) {
       scoresByField.push(new Float32Array(N)); // zero array
       continue;
     }
-    normalise(t);
-    scoresByField.push(scoreField(ctx, f, t));
+    const unit = normalise(t);
+    scoresByField.push(scoreField(ctx, f, unit));
   }
 
   const confs = scoresByField.map((s, f) => confidence(ctx, f, s));
